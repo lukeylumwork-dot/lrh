@@ -65,48 +65,150 @@
 :root {
   --radius: 0.375rem;
 
-  /* LRH brand */
-  --lrh-navy: oklch(0.30 0.09 250);          /* #032c51 */
-  --lrh-blue: oklch(0.65 0.20 255);          /* #238aff */
-  --lrh-bg: oklch(0.97 0.01 260);            /* #f4f6fc */
-  --lrh-soft-blue: oklch(0.90 0.04 255);     /* #c4dbfa */
-  --lrh-deep-navy: oklch(0.18 0.07 270);     /* #050a31 */
+  /* =====================================================================
+   * LRH BRAND TOKENS — institutional design rules
+   *
+   * Use these tokens in every slide. Never hard-code hex/oklch values
+   * directly in components. Tailwind utilities like `text-foreground`,
+   * `bg-primary`, `text-[var(--lrh-blue)]` all resolve through here.
+   * ===================================================================== */
 
-  --background: var(--lrh-bg);
-  --foreground: var(--lrh-navy);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--lrh-navy);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--lrh-navy);
-  --primary: var(--lrh-navy);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: var(--lrh-soft-blue);
-  --secondary-foreground: var(--lrh-navy);
-  --muted: oklch(0.93 0.01 260);
-  --muted-foreground: oklch(0.45 0.04 260);
-  --accent: var(--lrh-blue);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.88 0.02 260);
-  --input: oklch(0.88 0.02 260);
-  --ring: var(--lrh-blue);
-  --chart-1: var(--lrh-navy);
-  --chart-2: var(--lrh-blue);
-  --chart-3: var(--lrh-soft-blue);
-  --chart-4: var(--lrh-deep-navy);
-  --chart-5: oklch(0.55 0.10 255);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: var(--lrh-navy);
-  --sidebar-primary: var(--lrh-navy);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: var(--lrh-soft-blue);
-  --sidebar-accent-foreground: var(--lrh-navy);
-  --sidebar-border: oklch(0.88 0.02 260);
-  --sidebar-ring: var(--lrh-blue);
+  /* --- Color: navy spine (primary text & dark surfaces) --- */
+  --lrh-navy-900: oklch(0.18 0.07 270);   /* deepest, dark sections */
+  --lrh-navy-800: oklch(0.24 0.08 260);
+  --lrh-navy-700: oklch(0.30 0.09 250);   /* primary text, headings */
+  --lrh-navy-600: oklch(0.38 0.08 250);
+  --lrh-navy-500: oklch(0.48 0.07 250);   /* muted body */
 
+  /* --- Color: signature blue (accent, keyword highlight, CTAs) --- */
+  --lrh-blue-700: oklch(0.55 0.20 255);
+  --lrh-blue-600: oklch(0.60 0.20 255);
+  --lrh-blue-500: oklch(0.65 0.20 255);   /* core brand blue */
+  --lrh-blue-400: oklch(0.75 0.15 255);
+  --lrh-blue-300: oklch(0.85 0.08 255);
+  --lrh-blue-200: oklch(0.90 0.04 255);   /* soft tint, badges */
+  --lrh-blue-100: oklch(0.95 0.02 255);   /* faintest wash */
+
+  /* --- Color: neutral surface ramp --- */
+  --lrh-surface-0: oklch(1 0 0);          /* pure white cards */
+  --lrh-surface-50: oklch(0.98 0.005 260);
+  --lrh-surface-100: oklch(0.97 0.01 260); /* page background */
+  --lrh-surface-200: oklch(0.93 0.01 260); /* muted blocks */
+  --lrh-surface-300: oklch(0.88 0.02 260); /* borders, dividers */
+  --lrh-surface-400: oklch(0.78 0.02 260);
+
+  /* --- Color: status (use sparingly in an institutional deck) --- */
+  --lrh-success: oklch(0.65 0.15 155);
+  --lrh-warning: oklch(0.78 0.15 75);
+  --lrh-danger: oklch(0.58 0.22 27);
+
+  /* --- Aliases retained for legacy slide imports --- */
+  --lrh-navy: var(--lrh-navy-700);
+  --lrh-blue: var(--lrh-blue-500);
+  --lrh-bg: var(--lrh-surface-100);
+  --lrh-soft-blue: var(--lrh-blue-200);
+  --lrh-deep-navy: var(--lrh-navy-900);
+
+  /* --- Typography scale (1920×1080 reference frame) --- */
   --font-heading: "Be Vietnam Pro", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
+
+  --lrh-text-eyebrow: 0.6875rem;   /* 11px — uppercase tracked label */
+  --lrh-text-caption: 0.8125rem;   /* 13px */
+  --lrh-text-body: 1rem;           /* 16px */
+  --lrh-text-body-lg: 1.125rem;    /* 18px */
+  --lrh-text-h4: 1.5rem;           /* 24px — card titles */
+  --lrh-text-h3: 2rem;             /* 32px — section heads */
+  --lrh-text-h2: 2.5rem;           /* 40px — slide subtitles */
+  --lrh-text-h1: 3rem;             /* 48px — slide titles */
+  --lrh-text-display: 4.5rem;      /* 72px — title slide hero */
+
+  --lrh-tracking-eyebrow: 0.22em;
+  --lrh-tracking-tight: -0.01em;
+  --lrh-tracking-display: -0.02em;
+  --lrh-leading-display: 1.05;
+  --lrh-leading-heading: 1.15;
+  --lrh-leading-body: 1.55;
+
+  --lrh-weight-body: 400;
+  --lrh-weight-medium: 500;
+  --lrh-weight-bold: 700;
+
+  /* --- Spacing scale (slide-internal rhythm; multiples of 4) --- */
+  --lrh-space-1: 0.25rem;   /* 4px */
+  --lrh-space-2: 0.5rem;    /* 8px */
+  --lrh-space-3: 0.75rem;   /* 12px */
+  --lrh-space-4: 1rem;      /* 16px — base unit */
+  --lrh-space-5: 1.25rem;   /* 20px */
+  --lrh-space-6: 1.5rem;    /* 24px */
+  --lrh-space-8: 2rem;      /* 32px — block separation */
+  --lrh-space-10: 2.5rem;   /* 40px */
+  --lrh-space-12: 3rem;     /* 48px — slide gutter */
+  --lrh-space-16: 4rem;     /* 64px */
+  --lrh-space-20: 5rem;     /* 80px — slide padding */
+
+  /* --- Slide layout constants --- */
+  --lrh-slide-padding-x: var(--lrh-space-20);
+  --lrh-slide-padding-y: var(--lrh-space-12);
+  --lrh-slide-gutter: var(--lrh-space-10);
+
+  /* --- Radii --- */
+  --lrh-radius-sm: 0.25rem;
+  --lrh-radius-md: 0.375rem;
+  --lrh-radius-lg: 0.5rem;
+  --lrh-radius-xl: 0.75rem;
+
+  /* --- Elevation (subtle, institutional — no glassy glow) --- */
+  --lrh-shadow-sm: 0 1px 2px 0 oklch(0.18 0.07 270 / 0.04);
+  --lrh-shadow-md: 0 4px 12px -2px oklch(0.18 0.07 270 / 0.06),
+                   0 2px 4px -2px oklch(0.18 0.07 270 / 0.04);
+  --lrh-shadow-lg: 0 12px 32px -8px oklch(0.18 0.07 270 / 0.10),
+                   0 4px 8px -4px oklch(0.18 0.07 270 / 0.05);
+  --lrh-shadow-card: var(--lrh-shadow-md);
+
+  /* --- Borders --- */
+  --lrh-border-hairline: 1px solid var(--lrh-surface-300);
+  --lrh-border-strong: 1px solid var(--lrh-navy-700);
+
+  /* --- Motion --- */
+  --lrh-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --lrh-duration-fast: 150ms;
+  --lrh-duration: 240ms;
+  --lrh-duration-slow: 500ms;
+
+  /* --- Shadcn semantic mappings --- */
+  --background: var(--lrh-surface-100);
+  --foreground: var(--lrh-navy-700);
+  --card: var(--lrh-surface-0);
+  --card-foreground: var(--lrh-navy-700);
+  --popover: var(--lrh-surface-0);
+  --popover-foreground: var(--lrh-navy-700);
+  --primary: var(--lrh-navy-700);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: var(--lrh-blue-200);
+  --secondary-foreground: var(--lrh-navy-700);
+  --muted: var(--lrh-surface-200);
+  --muted-foreground: var(--lrh-navy-500);
+  --accent: var(--lrh-blue-500);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: var(--lrh-danger);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: var(--lrh-surface-300);
+  --input: var(--lrh-surface-300);
+  --ring: var(--lrh-blue-500);
+  --chart-1: var(--lrh-navy-700);
+  --chart-2: var(--lrh-blue-500);
+  --chart-3: var(--lrh-blue-200);
+  --chart-4: var(--lrh-navy-900);
+  --chart-5: var(--lrh-blue-700);
+  --sidebar: var(--lrh-surface-50);
+  --sidebar-foreground: var(--lrh-navy-700);
+  --sidebar-primary: var(--lrh-navy-700);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: var(--lrh-blue-200);
+  --sidebar-accent-foreground: var(--lrh-navy-700);
+  --sidebar-border: var(--lrh-surface-300);
+  --sidebar-ring: var(--lrh-blue-500);
 }
 
 .dark {
