@@ -7,9 +7,15 @@ import { SolutionSlide } from "@/components/slides/SolutionSlide";
 import { CompetitionSlide } from "@/components/slides/CompetitionSlide";
 import { StorySlide } from "@/components/slides/StorySlide";
 import { PipelineSlide } from "@/components/slides/PipelineSlide";
-import { ImportedSlide } from "@/components/slides/ImportedSlide";
+import {
+  ImportedSlide,
+  defaultBlocksForImported,
+} from "@/components/slides/ImportedSlide";
 import { ImportEmptyState } from "@/components/slides/ImportEmptyState";
 import { DeckModeToggle } from "@/components/slides/DeckModeToggle";
+import { EditorProvider, useEditor } from "@/components/slides/editor/EditorContext";
+import { EditorToolbar } from "@/components/slides/editor/EditorToolbar";
+import { EditorSidePanel } from "@/components/slides/editor/EditorSidePanel";
 import { supabase } from "@/integrations/supabase/client";
 import {
   parseAndSaveDeck,
@@ -53,13 +59,9 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 function Index() {
-  const [mode, setMode] = useState<"lrh" | "imported">("lrh");
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [deck, setDeck] = useState<ImportedDeckDTO | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Ensure a session (anonymous if needed) so RLS-scoped server fns work.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -79,6 +81,26 @@ function Index() {
       cancelled = true;
     };
   }, []);
+
+  return (
+    <EditorProvider authReady={authReady}>
+      <DeckShell authReady={authReady} authError={authError} />
+    </EditorProvider>
+  );
+}
+
+function DeckShell({
+  authReady,
+  authError,
+}: {
+  authReady: boolean;
+  authError: string | null;
+}) {
+  const [mode, setMode] = useState<"lrh" | "imported">("lrh");
+  const [deck, setDeck] = useState<ImportedDeckDTO | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const { getOverride } = useEditor();
 
   const loadDeck = useCallback(async () => {
     if (!authReady) return;
@@ -142,21 +164,59 @@ function Index() {
       ];
     }
     return deck.slides.map((s) => ({
-      id: `imp-${s.index}`,
-      node: <ImportedSlide slide={s} total={deck.slides.length} />,
+      id: `imp-${deck.id}-${s.index}`,
+      node: <ImportedSlide slide={s} total={deck.slides.length} deckId={deck.id} />,
     }));
   }, [mode, deck, handleUpload, authError]);
 
+  // Compute current slide info for the editor side panel.
+  const editorContext = useMemo(() => {
+    if (mode !== "imported" || !deck || deck.slides.length === 0) return null;
+    const slide = deck.slides[currentIndex];
+    if (!slide) return null;
+    const slideKey = `${deck.id}:${slide.index}`;
+    const defaultBlocks = defaultBlocksForImported(slide);
+    const ov = getOverride("imported", slideKey);
+    return {
+      slideKey,
+      blocks: ov?.blocks ?? defaultBlocks,
+      defaults: { blocks: defaultBlocks },
+      highlightKeyword: ov?.highlightKeyword ?? null,
+      layoutVariant: ov?.layoutVariant ?? null,
+    };
+  }, [mode, deck, currentIndex, getOverride]);
+
   return (
     <>
-      <SlideDeck slides={slides} />
+      <SlideDeck slides={slides} onIndexChange={setCurrentIndex} />
       <DeckModeToggle
         mode={mode}
-        onModeChange={setMode}
+        onModeChange={(m) => {
+          setMode(m);
+          setCurrentIndex(0);
+        }}
         hasImported={!!deck}
         onReplace={handleReplace}
         onDelete={handleDelete}
       />
+      {mode === "imported" && (
+        <>
+          <EditorToolbar
+            deckKind="imported"
+            currentSlideKey={editorContext?.slideKey ?? null}
+          />
+          {editorContext && (
+            <EditorSidePanel
+              deckKind="imported"
+              slideKey={editorContext.slideKey}
+              blocks={editorContext.blocks}
+              defaults={editorContext.defaults}
+              highlightKeyword={editorContext.highlightKeyword}
+              layoutVariant={editorContext.layoutVariant}
+            />
+          )}
+        </>
+      )}
       {loading && mode === "imported" && (
         <div className="fixed bottom-5 right-5 z-30 text-xs text-foreground/50">Loading…</div>
       )}
