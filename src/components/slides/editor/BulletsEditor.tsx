@@ -71,6 +71,13 @@ export function BulletsEditor({
     onExit();
   };
 
+  /** Escape: discard unsaved edits and close without committing. */
+  const cancel = () => {
+    setItems(value.length ? value : [""]);
+    onChange(normalize(value));
+    onExit();
+  };
+
   return (
     <div
       data-block-edit
