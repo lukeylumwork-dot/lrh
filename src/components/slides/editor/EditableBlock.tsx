@@ -182,11 +182,40 @@ export function EditableBlock({
   className,
   highlight,
 }: Props) {
-  const { editing, selectedBlockId, setSelectedBlockId, updateBlock } = useEditor();
+  const {
+    editing,
+    selectedBlockId,
+    setSelectedBlockId,
+    updateBlock,
+    updateOverride,
+  } = useEditor();
   const peers = useContext(Peers);
   const ref = useRef<HTMLDivElement>(null);
   const rect = useSlideRect(ref);
   const isSelected = editing && selectedBlockId === block.id;
+  const [inlineEdit, setInlineEdit] = useState(false);
+  useEffect(() => {
+    if (!isSelected) setInlineEdit(false);
+  }, [isSelected]);
+
+  // Cmd/Ctrl+K while a block is selected: set highlight keyword from current
+  // text selection (or clear it if nothing is selected).
+  useEffect(() => {
+    if (!isSelected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.key === "k" || e.key === "K") || !(e.metaKey || e.ctrlKey)) return;
+      e.preventDefault();
+      const sel = window.getSelection()?.toString().trim() ?? "";
+      updateOverride(
+        deckKind,
+        slideKey,
+        { highlightKeyword: sel || null },
+        defaults,
+      );
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isSelected, deckKind, slideKey, defaults, updateOverride]);
 
   const [draft, setDraft] = useState<string>(block.text ?? "");
   const [bulletDraft, setBulletDraft] = useState<string>(
@@ -372,16 +401,21 @@ export function EditableBlock({
         </div>
       );
     }
+    const editingThis = editing && inlineEdit && isSelected;
     switch (block.kind) {
       case "region":
         return peers.renderRegion?.(block.regionId ?? block.id) ?? null;
       case "title":
-        return editing ? (
+        return editingThis ? (
           <textarea
             data-block-edit
+            autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => commitText(draft)}
+            onBlur={() => {
+              commitText(draft);
+              setInlineEdit(false);
+            }}
             className="w-full h-full bg-transparent outline-none resize-none font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl"
           />
         ) : (
@@ -390,12 +424,16 @@ export function EditableBlock({
           </h1>
         );
       case "eyebrow":
-        return editing ? (
+        return editingThis ? (
           <input
             data-block-edit
+            autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => commitText(draft)}
+            onBlur={() => {
+              commitText(draft);
+              setInlineEdit(false);
+            }}
             className="w-full bg-transparent outline-none uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium text-[11px]"
           />
         ) : (
@@ -404,12 +442,16 @@ export function EditableBlock({
           </div>
         );
       case "text":
-        return editing ? (
+        return editingThis ? (
           <textarea
             data-block-edit
+            autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => commitText(draft)}
+            onBlur={() => {
+              commitText(draft);
+              setInlineEdit(false);
+            }}
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80"
           />
         ) : (
@@ -418,12 +460,16 @@ export function EditableBlock({
           </p>
         );
       case "bullets":
-        return editing ? (
+        return editingThis ? (
           <textarea
             data-block-edit
+            autoFocus
             value={bulletDraft}
             onChange={(e) => setBulletDraft(e.target.value)}
-            onBlur={() => commitBullets(bulletDraft)}
+            onBlur={() => {
+              commitBullets(bulletDraft);
+              setInlineEdit(false);
+            }}
             placeholder="One bullet per line"
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80 font-mono"
           />
@@ -456,29 +502,48 @@ export function EditableBlock({
     }
   };
 
+  const isTextual =
+    block.kind === "title" ||
+    block.kind === "text" ||
+    block.kind === "bullets" ||
+    block.kind === "eyebrow";
+
   return (
     <div
       ref={ref}
       style={style}
-      onMouseDown={startDrag}
+      onMouseDown={inlineEdit ? undefined : startDrag}
       onClick={(e) => {
         if (editing) {
           e.stopPropagation();
           setSelectedBlockId(block.id);
         }
       }}
+      onDoubleClick={(e) => {
+        if (!editing || !isTextual) return;
+        e.stopPropagation();
+        setSelectedBlockId(block.id);
+        setInlineEdit(true);
+      }}
+      title={
+        editing && isTextual && !inlineEdit
+          ? "Double-click to edit · Select text + ⌘K to set highlight"
+          : undefined
+      }
       className={cn(
         "transition-shadow",
         editing &&
+          !inlineEdit &&
           "cursor-move hover:outline hover:outline-1 hover:outline-[var(--lrh-blue-500)]/40",
         isSelected &&
           "outline outline-2 outline-[var(--lrh-blue-500)] rounded-sm",
+        inlineEdit && "cursor-text",
         block.hidden && "opacity-30",
         className,
       )}
     >
       {renderContent()}
-      {isSelected && (
+      {isSelected && !inlineEdit && (
         <div
           onMouseDown={startResize}
           className="absolute -bottom-1 -right-1 w-3 h-3 bg-[var(--lrh-blue-500)] rounded-sm cursor-nwse-resize z-10"
