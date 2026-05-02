@@ -1,4 +1,6 @@
-import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { SlideCard } from "./Card";
 import { assets } from "./assets";
 
@@ -14,15 +16,18 @@ const team = [
   { img: assets.team.agam, name: "Agam Mohal", role: "Junior Quantitative Analyst", bio: "Graduate with Capital Markets experience." },
 ];
 
-export function TeamSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>The Team</SlideEyebrow>
-      <SlideTitle highlight="Team" highlightPosition="after" className="mb-8">
-        The
-      </SlideTitle>
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "The Team", x: PAD_X, y: 6, w: 40, h: 3 },
+  { id: "title", kind: "title", text: "The Team", x: PAD_X, y: 11, w: 70, h: 10 },
+  { id: "team", kind: "region", regionId: "team", x: PAD_X, y: 28, w: 100 - 2 * PAD_X, h: 60 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
+];
 
-      <div className="flex-1 grid grid-cols-3 gap-4 min-h-0 overflow-hidden">
+export function TeamSlide() {
+  const regions = {
+    team: (
+      <div className="h-full grid grid-cols-3 gap-4 overflow-hidden">
         {team.map((m) => (
           <SlideCard key={m.name} className="flex gap-4 items-start py-4">
             <img
@@ -40,8 +45,8 @@ export function TeamSlide() {
           </SlideCard>
         ))}
       </div>
-
-      <SlideFooter page={13} />
-    </SlideLayout>
-  );
+    ),
+    footer: <SlideFooter page={13} />,
+  };
+  return <GenericSlide slideId="team" defaultBlocks={defaultBlocks} regions={regions} />;
 }
