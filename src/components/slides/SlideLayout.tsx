@@ -1,19 +1,31 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { textStyles } from "./brand";
 
 interface SlideLayoutProps {
   children: ReactNode;
+  /** Use the deep-navy section style (white-on-navy). */
   dark?: boolean;
+  /** Disable the institutional padding (e.g. for full-bleed editor canvases). */
+  bleed?: boolean;
   className?: string;
 }
 
-export function SlideLayout({ children, dark = false, className }: SlideLayoutProps) {
+export function SlideLayout({
+  children,
+  dark = false,
+  bleed = false,
+  className,
+}: SlideLayoutProps) {
   return (
     <div
       className={cn(
         "absolute inset-0 flex flex-col",
-        "px-12 py-10 md:px-20 md:py-14",
-        dark ? "bg-[var(--lrh-deep-navy)] text-white" : "bg-background text-foreground",
+        !bleed &&
+          "px-[var(--lrh-slide-padding-x)] py-[var(--lrh-slide-padding-y)]",
+        dark
+          ? "bg-[var(--lrh-navy-900)] text-white"
+          : "bg-[var(--lrh-surface-100)] text-[var(--lrh-navy-700)]",
         className,
       )}
     >
@@ -24,8 +36,11 @@ export function SlideLayout({ children, dark = false, className }: SlideLayoutPr
 
 interface SlideTitleProps {
   children: ReactNode;
+  /** A keyword colored brand-blue, appended/prepended to the title. */
   highlight?: string;
   highlightPosition?: "before" | "after";
+  /** Step down to h2 if you need a smaller title (e.g. continued slide). */
+  size?: "h1" | "h2";
   className?: string;
 }
 
@@ -33,21 +48,17 @@ export function SlideTitle({
   children,
   highlight,
   highlightPosition = "after",
+  size = "h1",
   className,
 }: SlideTitleProps) {
   return (
-    <h1
-      className={cn(
-        "font-heading text-4xl md:text-5xl font-bold tracking-tight leading-[1.05]",
-        className,
-      )}
-    >
+    <h1 className={cn(size === "h1" ? textStyles.h1 : textStyles.h2, className)}>
       {highlightPosition === "before" && highlight && (
-        <span className="text-[var(--lrh-blue)]">{highlight} </span>
+        <span className="text-[var(--lrh-blue-500)]">{highlight} </span>
       )}
       {children}
       {highlightPosition === "after" && highlight && (
-        <span className="text-[var(--lrh-blue)]"> {highlight}</span>
+        <span className="text-[var(--lrh-blue-500)]"> {highlight}</span>
       )}
     </h1>
   );
@@ -55,12 +66,19 @@ export function SlideTitle({
 
 interface SlideBodyProps {
   children: ReactNode;
+  muted?: boolean;
   className?: string;
 }
 
-export function SlideBody({ children, className }: SlideBodyProps) {
+export function SlideBody({ children, muted = false, className }: SlideBodyProps) {
   return (
-    <p className={cn("text-base md:text-lg leading-relaxed max-w-4xl text-foreground/75", className)}>
+    <p
+      className={cn(
+        muted ? textStyles.bodyMuted : textStyles.bodyLg,
+        "max-w-4xl",
+        className,
+      )}
+    >
       {children}
     </p>
   );
@@ -76,7 +94,10 @@ export function SlideFooter({ page, total = 19, className }: SlideFooterProps) {
   return (
     <div
       className={cn(
-        "pt-5 mt-5 border-t border-border/60 flex justify-between items-center text-[11px] uppercase tracking-[0.16em] text-foreground/45",
+        "pt-[var(--lrh-space-5)] mt-[var(--lrh-space-5)] border-t border-[var(--lrh-surface-300)]",
+        "flex justify-between items-center",
+        textStyles.caption,
+        "uppercase tracking-[0.16em] text-[var(--lrh-navy-500)]",
         className,
       )}
     >
@@ -93,12 +114,7 @@ interface SlideEyebrowProps {
 
 export function SlideEyebrow({ children, className }: SlideEyebrowProps) {
   return (
-    <div
-      className={cn(
-        "text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue)] font-medium mb-3",
-        className,
-      )}
-    >
+    <div className={cn(textStyles.eyebrow, "mb-[var(--lrh-space-3)]", className)}>
       {children}
     </div>
   );
