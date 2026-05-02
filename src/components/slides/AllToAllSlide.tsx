@@ -1,30 +1,37 @@
-import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { assets } from "./assets";
 
-export function AllToAllSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>Future Vision</SlideEyebrow>
-      <SlideTitle highlight="all-to-all" highlightPosition="after" className="mb-3">
-        What is a repo
-      </SlideTitle>
-      <SlideTitle highlight="" className="-mt-6 mb-5">
-        Trading Venue?
-      </SlideTitle>
-      <p className="text-sm md:text-base text-foreground/70 max-w-3xl mb-6">
-        One trusted data layer. Many clients. End-to-end impact across the trade lifecycle —
-        execution, settlement, clearing and regulatory reporting.
-      </p>
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "Future Vision", x: PAD_X, y: 6, w: 40, h: 3 },
+  { id: "title", kind: "title", text: "What is a repo all-to-all Trading Venue?", x: PAD_X, y: 11, w: 80, h: 14 },
+  {
+    id: "body",
+    kind: "text",
+    text: "One trusted data layer. Many clients. End-to-end impact across the trade lifecycle — execution, settlement, clearing and regulatory reporting.",
+    x: PAD_X,
+    y: 28,
+    w: 70,
+    h: 8,
+  },
+  { id: "diagram", kind: "region", regionId: "diagram", x: PAD_X, y: 40, w: 100 - 2 * PAD_X, h: 48 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
+];
 
-      <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden">
+export function AllToAllSlide() {
+  const regions = {
+    diagram: (
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
         <img
           src={assets.allToAllDiagram}
           alt="LRH data layer ecosystem powering banks, hedge funds, asset managers, and money market funds via a repo all-to-all trading venue"
           className="max-h-full max-w-full object-contain rounded-md border border-border bg-card"
         />
       </div>
-
-      <SlideFooter page={19} />
-    </SlideLayout>
-  );
+    ),
+    footer: <SlideFooter page={19} />,
+  };
+  return <GenericSlide slideId="allToAll" defaultBlocks={defaultBlocks} regions={regions} />;
 }

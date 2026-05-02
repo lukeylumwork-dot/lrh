@@ -1,4 +1,6 @@
-import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { SlideCard } from "./Card";
 import { IconPlaceholder } from "./IconPlaceholder";
 import { Users, TrendingDown, Handshake, PoundSterling, CalendarCheck, Route } from "lucide-react";
@@ -12,15 +14,18 @@ const metrics = [
   { icon: Route, label: "Use of Funds", value: "18 mo", sub: "Runway to deliver roadmap & critical mass" },
 ];
 
-export function InvestmentAskSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>Investment Ask</SlideEyebrow>
-      <SlideTitle highlight="Ask" highlightPosition="after" className="mb-10">
-        Investment
-      </SlideTitle>
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "Investment Ask", x: PAD_X, y: 6, w: 40, h: 3 },
+  { id: "title", kind: "title", text: "Investment Ask", x: PAD_X, y: 11, w: 70, h: 10 },
+  { id: "metrics", kind: "region", regionId: "metrics", x: PAD_X, y: 30, w: 100 - 2 * PAD_X, h: 58 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
+];
 
-      <div className="flex-1 grid grid-cols-3 gap-5 min-h-0">
+export function InvestmentAskSlide() {
+  const regions = {
+    metrics: (
+      <div className="h-full grid grid-cols-3 gap-5">
         {metrics.map((m) => (
           <SlideCard
             key={m.label}
@@ -43,8 +48,8 @@ export function InvestmentAskSlide() {
           </SlideCard>
         ))}
       </div>
-
-      <SlideFooter page={11} />
-    </SlideLayout>
-  );
+    ),
+    footer: <SlideFooter page={11} />,
+  };
+  return <GenericSlide slideId="investmentAsk" defaultBlocks={defaultBlocks} regions={regions} />;
 }

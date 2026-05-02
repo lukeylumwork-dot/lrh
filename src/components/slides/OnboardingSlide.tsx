@@ -1,41 +1,36 @@
-import { SlideLayout, SlideTitle, SlideBody, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { SlideCard } from "./Card";
 
 const steps = [
+  { n: "01", title: "Authorization Form", body: "Client signs the form. This permits the Trade Repository to share SFTR data with LRH." },
+  { n: "02", title: "SFTP Connectivity Form", body: "Client signs the form. This allows LRH to pull SFTR data via SFTP." },
+  { n: "03", title: "Subscription Agreement", body: "Client signs the agreement, formalizing their engagement with LRH." },
+  { n: "04", title: "Account & UI Access", body: "LRH creates the client account and provides login access to the User Interface." },
+];
+
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "Client Onboarding Process", x: PAD_X, y: 6, w: 50, h: 3 },
+  { id: "title", kind: "title", text: "Client Onboarding", x: PAD_X, y: 11, w: 70, h: 10 },
   {
-    n: "01",
-    title: "Authorization Form",
-    body: "Client signs the form. This permits the Trade Repository to share SFTR data with LRH.",
+    id: "body",
+    kind: "text",
+    text: "No engineering resources or technical integrations required from the banks to onboard.",
+    x: PAD_X,
+    y: 22,
+    w: 70,
+    h: 6,
   },
-  {
-    n: "02",
-    title: "SFTP Connectivity Form",
-    body: "Client signs the form. This allows LRH to pull SFTR data via SFTP.",
-  },
-  {
-    n: "03",
-    title: "Subscription Agreement",
-    body: "Client signs the agreement, formalizing their engagement with LRH.",
-  },
-  {
-    n: "04",
-    title: "Account & UI Access",
-    body: "LRH creates the client account and provides login access to the User Interface.",
-  },
+  { id: "steps", kind: "region", regionId: "steps", x: PAD_X, y: 33, w: 100 - 2 * PAD_X, h: 55 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
 ];
 
 export function OnboardingSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>Client Onboarding Process</SlideEyebrow>
-      <div className="space-y-3 mb-10">
-        <SlideTitle highlight="Onboarding" highlightPosition="after">Client</SlideTitle>
-        <SlideBody>
-          No engineering resources or technical integrations required from the banks to onboard.
-        </SlideBody>
-      </div>
-
-      <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
+  const regions = {
+    steps: (
+      <div className="h-full grid grid-cols-4 gap-4">
         {steps.map((s) => (
           <SlideCard key={s.n} className="flex flex-col">
             <div className="font-heading font-bold text-5xl text-[var(--lrh-blue)]/30 leading-none mb-4">
@@ -49,8 +44,8 @@ export function OnboardingSlide() {
           </SlideCard>
         ))}
       </div>
-
-      <SlideFooter page={9} />
-    </SlideLayout>
-  );
+    ),
+    footer: <SlideFooter page={9} />,
+  };
+  return <GenericSlide slideId="onboarding" defaultBlocks={defaultBlocks} regions={regions} />;
 }
