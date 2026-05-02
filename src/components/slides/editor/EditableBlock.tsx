@@ -28,7 +28,7 @@ interface Props {
 }
 
 /** Resolve container element to compute pixel-per-percent ratio for drag. */
-function useSlideRect(ref: React.RefObject<HTMLElement>) {
+function useSlideRect(ref: React.RefObject<HTMLElement | null>) {
   const [rect, setRect] = useState({ w: SLIDE_W, h: SLIDE_H });
   useLayoutEffect(() => {
     if (!ref.current) return;
