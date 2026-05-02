@@ -495,11 +495,67 @@ export function EditableBlock({
     block.kind === "bullets" ||
     block.kind === "eyebrow";
 
+  // Alt+Click on textual content picks the clicked word as the slide's
+  // highlight keyword (or clears it if the click hits whitespace).
+  const pickHighlightAt = useCallback(
+    (clientX: number, clientY: number) => {
+      type DocWithCaret = Document & {
+        caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
+        caretRangeFromPoint?: (x: number, y: number) => Range | null;
+      };
+      const doc = document as DocWithCaret;
+      let node: Node | null = null;
+      let offset = 0;
+      if (doc.caretPositionFromPoint) {
+        const pos = doc.caretPositionFromPoint(clientX, clientY);
+        if (pos) {
+          node = pos.offsetNode;
+          offset = pos.offset;
+        }
+      } else if (doc.caretRangeFromPoint) {
+        const r = doc.caretRangeFromPoint(clientX, clientY);
+        if (r) {
+          node = r.startContainer;
+          offset = r.startOffset;
+        }
+      }
+      if (!node || node.nodeType !== Node.TEXT_NODE) {
+        updateOverride(deckKind, slideKey, { highlightKeyword: null }, defaults);
+        return;
+      }
+      const text = node.textContent ?? "";
+      // Word characters incl. hyphens.
+      const isWord = (c: string) => /[\w-]/.test(c);
+      let s = offset;
+      let e = offset;
+      while (s > 0 && isWord(text[s - 1])) s--;
+      while (e < text.length && isWord(text[e])) e++;
+      const word = text.slice(s, e).trim();
+      updateOverride(
+        deckKind,
+        slideKey,
+        { highlightKeyword: word || null },
+        defaults,
+      );
+    },
+    [deckKind, slideKey, defaults, updateOverride],
+  );
+
   return (
     <div
       ref={ref}
       style={style}
-      onMouseDown={inlineEdit ? undefined : startDrag}
+      onMouseDown={(e) => {
+        // Alt-click on textual block picks the highlight keyword instead of dragging.
+        if (editing && isTextual && e.altKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          setSelectedBlockId(block.id);
+          pickHighlightAt(e.clientX, e.clientY);
+          return;
+        }
+        if (!inlineEdit) startDrag(e);
+      }}
       onClick={(e) => {
         if (editing) {
           e.stopPropagation();
@@ -514,7 +570,7 @@ export function EditableBlock({
       }}
       title={
         editing && isTextual && !inlineEdit
-          ? "Double-click to edit · Select text + ⌘K to set highlight"
+          ? "Double-click to edit · Alt-click a word to set highlight · ⌘K uses text selection"
           : undefined
       }
       className={cn(
