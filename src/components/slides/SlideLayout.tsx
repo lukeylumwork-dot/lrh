@@ -90,7 +90,7 @@ export function SlideBody({ children, muted = false, className }: SlideBodyProps
         className,
       )}
     >
-      {children}
+      {highlightChildren(children)}
     </p>
   );
 }
