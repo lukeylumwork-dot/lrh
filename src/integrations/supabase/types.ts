@@ -14,7 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      imported_decks: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          source_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      imported_slides: {
+        Row: {
+          bullets: Json
+          deck_id: string
+          id: string
+          image_urls: Json
+          index: number
+          notes: string | null
+          title: string | null
+        }
+        Insert: {
+          bullets?: Json
+          deck_id: string
+          id?: string
+          image_urls?: Json
+          index: number
+          notes?: string | null
+          title?: string | null
+        }
+        Update: {
+          bullets?: Json
+          deck_id?: string
+          id?: string
+          image_urls?: Json
+          index?: number
+          notes?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imported_slides_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "imported_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
