@@ -66,6 +66,13 @@ function Index() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Lazy import to keep this client-only.
+    import("@/integrations/supabase/install-fetch-auth").then((m) =>
+      m.installServerFnAuth(),
+    );
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await supabase.auth.getSession();
