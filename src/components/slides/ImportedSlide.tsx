@@ -1,5 +1,5 @@
 import { SlideLayout } from "./SlideLayout";
-import { EditableBlock } from "./editor/EditableBlock";
+import { EditableBlock, PeersProvider } from "./editor/EditableBlock";
 import { useEditor } from "./editor/EditorContext";
 import type { Block } from "./editor/types";
 import type { ImportedSlideDTO } from "@/server/imports.functions";
@@ -80,16 +80,18 @@ export function ImportedSlide({ slide, total, deckId }: Props) {
   return (
     <SlideLayout className="!p-0">
       <div className="absolute inset-0">
-        {blocks.map((b) => (
-          <EditableBlock
-            key={b.id}
-            deckKind="imported"
-            slideKey={slideKey}
-            block={b}
-            defaults={defaults}
-            highlight={highlight}
-          />
-        ))}
+        <PeersProvider blocks={blocks}>
+          {blocks.map((b) => (
+            <EditableBlock
+              key={b.id}
+              deckKind="imported"
+              slideKey={slideKey}
+              block={b}
+              defaults={defaults}
+              highlight={highlight}
+            />
+          ))}
+        </PeersProvider>
       </div>
       <div className="absolute bottom-3 right-6 text-[10px] uppercase tracking-[0.18em] text-foreground/40 z-0 pointer-events-none">
         {slide.index + 1} / {total}
