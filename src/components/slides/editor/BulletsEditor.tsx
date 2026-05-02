@@ -130,7 +130,11 @@ export function BulletsEditor({
                   onChange(normalize(next));
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    onCommit(normalize(items));
+                    (onExitDeck ?? onExit)();
+                  } else if (e.key === "Enter") {
                     e.preventDefault();
                     const next = items.slice();
                     next.splice(i + 1, 0, "");
