@@ -12,7 +12,7 @@ export function SlideLayout({ children, dark = false, className }: SlideLayoutPr
     <div
       className={cn(
         "absolute inset-0 flex flex-col",
-        "px-16 py-14 md:px-24 md:py-16",
+        "px-12 py-10 md:px-20 md:py-14",
         dark ? "bg-[var(--lrh-deep-navy)] text-white" : "bg-background text-foreground",
         className,
       )}
@@ -29,10 +29,6 @@ interface SlideTitleProps {
   className?: string;
 }
 
-/**
- * SlideTitle: renders title with one keyword highlighted in blue.
- * Pass highlight as the keyword and the rest as children.
- */
 export function SlideTitle({
   children,
   highlight,
@@ -42,7 +38,7 @@ export function SlideTitle({
   return (
     <h1
       className={cn(
-        "font-heading text-5xl md:text-6xl font-bold tracking-tight leading-[1.05]",
+        "font-heading text-4xl md:text-5xl font-bold tracking-tight leading-[1.05]",
         className,
       )}
     >
@@ -64,8 +60,46 @@ interface SlideBodyProps {
 
 export function SlideBody({ children, className }: SlideBodyProps) {
   return (
-    <p className={cn("text-lg md:text-xl leading-relaxed max-w-4xl text-foreground/80", className)}>
+    <p className={cn("text-base md:text-lg leading-relaxed max-w-4xl text-foreground/75", className)}>
       {children}
     </p>
+  );
+}
+
+interface SlideFooterProps {
+  page: number;
+  total?: number;
+  className?: string;
+}
+
+export function SlideFooter({ page, total = 19, className }: SlideFooterProps) {
+  return (
+    <div
+      className={cn(
+        "pt-5 mt-5 border-t border-border/60 flex justify-between items-center text-[11px] uppercase tracking-[0.16em] text-foreground/45",
+        className,
+      )}
+    >
+      <span>© London Reporting House 2026 · Private &amp; Confidential</span>
+      <span>{page} / {total}</span>
+    </div>
+  );
+}
+
+interface SlideEyebrowProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function SlideEyebrow({ children, className }: SlideEyebrowProps) {
+  return (
+    <div
+      className={cn(
+        "text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue)] font-medium mb-3",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }

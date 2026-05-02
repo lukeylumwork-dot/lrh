@@ -1,70 +1,77 @@
-import { SlideLayout, SlideTitle } from "@/components/slides/SlideLayout";
-import { SlideCard } from "@/components/slides/Card";
-import { IconPlaceholder } from "@/components/slides/IconPlaceholder";
-import { Database, FileCode, Users } from "lucide-react";
+import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { SlideCard } from "./Card";
+import { Check } from "lucide-react";
 
 const competitors = [
   {
-    icon: Database,
-    title: "Venue Data",
-    points: ["Timely but siloed", "Restricted to participants", "Limited OTC coverage"],
+    name: "Venue Data",
+    items: ["Timely but siloed", "Restricted to participants", "Limited OTC coverage"],
   },
   {
-    icon: FileCode,
-    title: "Regulatory / Public Data",
-    points: ["Broad but retrospective", "High-level only", "Limited visibility into specials and haircuts"],
+    name: "Regulatory / Public Data",
+    items: ["Broad but retrospective", "High-level only", "Limited visibility into specials & haircuts"],
   },
   {
-    icon: Users,
-    title: "Broker Feeds",
-    points: ["Valuable but proprietary", "Incomplete across venues", "Incomplete across counterparties"],
+    name: "Broker Feeds",
+    items: ["Valuable but proprietary", "Incomplete across venues", "Incomplete across counterparties"],
   },
 ];
 
-const lrhEdges = ["Multi-party Aggregated STR", "Enrichment & Quality", "GC vs. Specials", "Flows Drill-downs", "Portfolio Analytics"];
+const lrhEdge = [
+  "Multi-party aggregated SFTR, including OTC",
+  "Enrichment & quality checks",
+  "GC vs. Specials classification",
+  "Flows drill-downs",
+  "Portfolio-level analytics",
+];
 
 export function CompetitionSlide() {
   return (
     <SlideLayout>
-      <div className="space-y-2 mb-10">
+      <SlideEyebrow>Competitor Landscape</SlideEyebrow>
+      <div className="space-y-2 mb-8">
         <SlideTitle highlight="Landscape" highlightPosition="after">Competitor</SlideTitle>
-        <p className="text-lg text-foreground/70">LRH vs. market alternatives</p>
+        <p className="text-sm text-foreground/60">LRH vs. market alternatives</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        {competitors.map((c) => (
-          <div key={c.title} className="space-y-4">
-            <IconPlaceholder icon={c.icon} size="md" />
-            <h3 className="font-heading font-bold text-xl">{c.title}</h3>
-            <ul className="space-y-2 text-sm text-foreground/70">
-              {c.points.map((p) => (
-                <li key={p} className="flex gap-2"><span className="text-[var(--lrh-blue)]">•</span>{p}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <SlideCard variant="soft" className="flex-1">
-        <div className="flex items-center gap-4 mb-5">
-          <div className="h-9 w-9 rounded-full border-2 border-[var(--lrh-blue)] flex items-center justify-center">
-            <span className="font-heading font-bold text-xs text-[var(--lrh-navy)]">LRH</span>
-          </div>
-          <span className="font-heading font-bold text-base">The LRH edge</span>
-        </div>
-        <div className="grid grid-cols-5 gap-4">
-          {lrhEdges.map((e) => (
-            <div key={e} className="bg-card rounded-md p-4 text-center text-sm font-heading font-bold text-foreground/90 min-h-[80px] flex items-center justify-center">
-              {e}
-            </div>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-0">
+        <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {competitors.map((c) => (
+            <SlideCard key={c.name} className="flex flex-col">
+              <h3 className="font-heading font-bold text-sm uppercase tracking-wide text-foreground/70 mb-3 pb-3 border-b border-border">
+                {c.name}
+              </h3>
+              <ul className="space-y-2 text-sm text-foreground/80">
+                {c.items.map((i) => <li key={i}>· {i}</li>)}
+              </ul>
+            </SlideCard>
           ))}
         </div>
-      </SlideCard>
 
-      <div className="pt-6 mt-6 border-t border-border flex justify-between text-xs text-foreground/50">
-        <span>© London Reporting House 2026 · Private &amp; Confidential</span>
-        <span>4 / 6</span>
+        <div className="lg:col-span-5">
+          <SlideCard variant="soft" className="h-full bg-[var(--lrh-deep-navy)] border-[var(--lrh-deep-navy)] text-white">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="font-heading font-bold text-base text-[var(--lrh-blue)]">LRH</span>
+              <span className="text-xs uppercase tracking-[0.18em] text-white/60">The Edge</span>
+            </div>
+            <ul className="space-y-3">
+              {lrhEdge.map((e) => (
+                <li key={e} className="flex gap-3 items-start text-sm">
+                  <span className="mt-0.5 flex-shrink-0 h-5 w-5 rounded-full bg-[var(--lrh-blue)] flex items-center justify-center">
+                    <Check size={12} strokeWidth={3} />
+                  </span>
+                  <span>{e}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 pt-4 border-t border-white/10 text-xs text-white/50 italic">
+              See appendix for detailed competitor analysis (S&amp;P, DTCC, others).
+            </p>
+          </SlideCard>
+        </div>
       </div>
+
+      <SlideFooter page={5} />
     </SlideLayout>
   );
 }
