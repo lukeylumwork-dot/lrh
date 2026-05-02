@@ -7,6 +7,8 @@ interface BulletsEditorProps {
   onChange: (next: string[]) => void;
   onCommit: (next: string[]) => void;
   onExit: () => void;
+  /** Cmd/Ctrl+Enter: commit and also leave canvas edit mode entirely. */
+  onExitDeck?: () => void;
 }
 
 /** Normalize: trim, drop blanks, collapse internal newlines to single bullets. */
@@ -26,6 +28,7 @@ export function BulletsEditor({
   onChange,
   onCommit,
   onExit,
+  onExitDeck,
 }: BulletsEditorProps) {
   const [items, setItems] = useState<string[]>(
     value.length ? value : [""],
@@ -127,7 +130,11 @@ export function BulletsEditor({
                   onChange(normalize(next));
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    onCommit(normalize(items));
+                    (onExitDeck ?? onExit)();
+                  } else if (e.key === "Enter") {
                     e.preventDefault();
                     const next = items.slice();
                     next.splice(i + 1, 0, "");
