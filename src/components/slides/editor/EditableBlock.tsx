@@ -221,6 +221,8 @@ export function EditableBlock({
 
   const [draft, setDraft] = useState<string>(block.text ?? "");
   useEffect(() => setDraft(block.text ?? ""), [block.text]);
+  /** Set true by Escape so the imminent onBlur skips the commit. */
+  const cancelRef = useRef(false);
 
   const commitText = useCallback(
     (val: string) => {
@@ -239,7 +241,8 @@ export function EditableBlock({
     [block.id, block.bullets, deckKind, slideKey, updateBlock, defaults],
   );
 
-  /** Cmd/Ctrl+Enter on text/title/eyebrow inline editors: commit + exit edit mode. */
+  /** Cmd/Ctrl+Enter on text/title/eyebrow inline editors: commit + exit edit mode.
+   *  Escape: discard draft and close inline editor without saving. */
   const handleTextKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -250,10 +253,26 @@ export function EditableBlock({
         setSelectedBlockId(null);
       } else if (e.key === "Escape") {
         e.preventDefault();
+        cancelRef.current = true;
+        setDraft(block.text ?? "");
         setInlineEdit(false);
       }
     },
-    [commitText, setEditing, setSelectedBlockId],
+    [commitText, setEditing, setSelectedBlockId, block.text],
+  );
+
+  /** onBlur for textual inline editors — commits unless Escape just fired. */
+  const handleTextBlur = useCallback(
+    (val: string) => {
+      if (cancelRef.current) {
+        cancelRef.current = false;
+        setInlineEdit(false);
+        return;
+      }
+      commitText(val);
+      setInlineEdit(false);
+    },
+    [commitText],
   );
 
   // Drag --------------------------------------------------------------------
@@ -424,10 +443,7 @@ export function EditableBlock({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
-            onBlur={() => {
-              commitText(draft);
-              setInlineEdit(false);
-            }}
+            onBlur={() => handleTextBlur(draft)}
             className="w-full h-full bg-transparent outline-none resize-none font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl"
           />
         ) : (
@@ -443,10 +459,7 @@ export function EditableBlock({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
-            onBlur={() => {
-              commitText(draft);
-              setInlineEdit(false);
-            }}
+            onBlur={() => handleTextBlur(draft)}
             className="w-full bg-transparent outline-none uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium text-[11px]"
           />
         ) : (
@@ -462,10 +475,7 @@ export function EditableBlock({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
-            onBlur={() => {
-              commitText(draft);
-              setInlineEdit(false);
-            }}
+            onBlur={() => handleTextBlur(draft)}
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80"
           />
         ) : (
@@ -477,7 +487,7 @@ export function EditableBlock({
         return editingThis ? (
           <BulletsEditor
             value={block.bullets ?? []}
-            onChange={(arr) => commitBullets(arr)}
+            onChange={() => {}}
             onCommit={(arr) => commitBullets(arr)}
             onExit={() => setInlineEdit(false)}
             onExitDeck={() => {

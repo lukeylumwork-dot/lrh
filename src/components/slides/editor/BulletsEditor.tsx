@@ -71,6 +71,16 @@ export function BulletsEditor({
     onExit();
   };
 
+  /** Escape: discard unsaved edits and close without committing. Restores
+   *  the original value by sending it back through onCommit (since onChange
+   *  already pushes live edits up to the parent on every keystroke). */
+  const cancel = () => {
+    const original = normalize(value);
+    setItems(value.length ? value : [""]);
+    onCommit(original);
+    onExit();
+  };
+
   return (
     <div
       data-block-edit
@@ -162,7 +172,7 @@ export function BulletsEditor({
                     }
                   } else if (e.key === "Escape") {
                     e.preventDefault();
-                    commit();
+                    cancel();
                   }
                 }}
                 onPaste={(e) => {
