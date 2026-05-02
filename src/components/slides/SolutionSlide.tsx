@@ -1,4 +1,6 @@
-import { SlideLayout, SlideTitle, SlideBody, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { IconPlaceholder } from "./IconPlaceholder";
 import { Download, Sparkles, Layers, TrendingUp, Send, ArrowRight } from "lucide-react";
 
@@ -19,36 +21,47 @@ const features = [
   "ISIN Search",
 ];
 
-export function SolutionSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>The Solution</SlideEyebrow>
-      <div className="space-y-4 mb-10">
-        <SlideTitle highlight="Solution" highlightPosition="before">The</SlideTitle>
-        <SlideBody>
-          We automatically ingest clients' SFTR data from the Trade Repository. It is anonymised,
-          cleaned, aggregated with peer data, enriched with external data, and delivered via UI
-          and API in a give-to-get model.
-        </SlideBody>
-      </div>
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "The Solution", x: PAD_X, y: 6, w: 40, h: 3 },
+  { id: "title", kind: "title", text: "The Solution", x: PAD_X, y: 11, w: 70, h: 12 },
+  {
+    id: "body",
+    kind: "text",
+    text: "We automatically ingest clients' SFTR data from the Trade Repository. It is anonymised, cleaned, aggregated with peer data, enriched with external data, and delivered via UI and API in a give-to-get model.",
+    x: PAD_X,
+    y: 25,
+    w: 75,
+    h: 12,
+  },
+  { id: "pipeline", kind: "region", regionId: "pipeline", x: PAD_X, y: 42, w: 100 - 2 * PAD_X, h: 22 },
+  { id: "features", kind: "region", regionId: "features", x: PAD_X, y: 68, w: 100 - 2 * PAD_X, h: 22 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
+];
 
-      <div className="flex items-center mb-12">
+export function SolutionSlide() {
+  const regions = {
+    pipeline: (
+      <div className="flex items-center h-full">
         <div className="w-full flex items-center justify-between gap-2">
           {steps.map((step, i) => (
             <div key={step.label} className="flex items-center gap-2 flex-1 last:flex-none">
               <div className="flex flex-col items-center gap-3 flex-1">
                 <IconPlaceholder icon={step.icon} size="lg" />
-                <span className="font-heading font-bold text-base md:text-lg">{step.label}</span>
+                <span className="font-heading font-bold text-base md:text-lg">
+                  {step.label}
+                </span>
               </div>
               {i < steps.length - 1 && (
-                <ArrowRight className="text-[var(--lrh-blue)] shrink-0" size={24} strokeWidth={2} />
+                <ArrowRight className="text-[var(--lrh-blue-500)] shrink-0" size={24} strokeWidth={2} />
               )}
             </div>
           ))}
         </div>
       </div>
-
-      <div className="flex-1 flex flex-col">
+    ),
+    features: (
+      <div className="h-full flex flex-col">
         <div className="text-xs uppercase tracking-[0.18em] text-foreground/55 mb-3">
           Live features for Government Bond &amp; Credit Repo
         </div>
@@ -56,15 +69,17 @@ export function SolutionSlide() {
           {features.map((f) => (
             <span
               key={f}
-              className="px-3 py-1.5 rounded-full bg-[var(--lrh-soft-blue)]/50 border border-[var(--lrh-soft-blue)] text-sm font-medium text-[var(--lrh-deep-navy)]"
+              className="px-3 py-1.5 rounded-full bg-[var(--lrh-soft-blue)]/50 border border-[var(--lrh-soft-blue)] text-sm font-medium text-[var(--lrh-navy-900)]"
             >
               {f}
             </span>
           ))}
         </div>
       </div>
-
-      <SlideFooter page={4} />
-    </SlideLayout>
+    ),
+    footer: <SlideFooter page={4} />,
+  };
+  return (
+    <GenericSlide slideId="solution" defaultBlocks={defaultBlocks} regions={regions} />
   );
 }

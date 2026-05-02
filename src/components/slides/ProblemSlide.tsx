@@ -1,4 +1,6 @@
-import { SlideLayout, SlideTitle, SlideBody, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { GenericSlide } from "./editor/GenericSlide";
+import type { Block } from "./editor/types";
+import { SlideFooter } from "./SlideLayout";
 import { SlideCard } from "./Card";
 import { IconPlaceholder } from "./IconPlaceholder";
 import { Hourglass, EyeOff, PoundSterling, TrendingDown } from "lucide-react";
@@ -26,32 +28,45 @@ const items = [
   },
 ];
 
-export function ProblemSlide() {
-  return (
-    <SlideLayout>
-      <SlideEyebrow>The Problem</SlideEyebrow>
-      <div className="space-y-4 mb-8">
-        <SlideTitle highlight="No Market" highlightPosition="before">in Repo Market Data</SlideTitle>
-        <SlideBody>
-          The repo market is highly opaque and fragmented, lacking a unified, timely, or detailed
-          data source. Unlike exchange-traded markets, repo transactions occur across multiple
-          venues and bilateral channels.
-        </SlideBody>
-      </div>
+const PAD_X = 6.25;
+const defaultBlocks: Block[] = [
+  { id: "eyebrow", kind: "eyebrow", text: "The Problem", x: PAD_X, y: 6, w: 50, h: 3 },
+  { id: "title", kind: "title", text: "No Market in Repo Market Data", x: PAD_X, y: 11, w: 70, h: 12 },
+  {
+    id: "body",
+    kind: "text",
+    text: "The repo market is highly opaque and fragmented, lacking a unified, timely, or detailed data source. Unlike exchange-traded markets, repo transactions occur across multiple venues and bilateral channels.",
+    x: PAD_X,
+    y: 25,
+    w: 70,
+    h: 12,
+  },
+  { id: "cards", kind: "region", regionId: "cards", x: PAD_X, y: 42, w: 100 - 2 * PAD_X, h: 45 },
+  { id: "footer", kind: "region", regionId: "footer", x: PAD_X, y: 92, w: 100 - 2 * PAD_X, h: 5 },
+];
 
-      <div className="flex-1 grid grid-cols-2 gap-5 min-h-0">
+export function ProblemSlide() {
+  const regions = {
+    cards: (
+      <div className="grid grid-cols-2 gap-5 h-full">
         {items.map((item) => (
           <SlideCard key={item.title} className="flex gap-5 items-start">
             <IconPlaceholder icon={item.icon} size="md" />
             <div className="flex-1">
-              <h3 className="font-heading font-bold text-lg mb-2">{item.title}</h3>
-              <p className="text-sm text-foreground/70 leading-relaxed">{item.body}</p>
+              <h3 className="font-heading font-bold text-lg mb-2">
+                {item.title}
+              </h3>
+              <p className="text-sm text-foreground/70 leading-relaxed">
+                {item.body}
+              </p>
             </div>
           </SlideCard>
         ))}
       </div>
-
-      <SlideFooter page={3} />
-    </SlideLayout>
+    ),
+    footer: <SlideFooter page={3} />,
+  };
+  return (
+    <GenericSlide slideId="problem" defaultBlocks={defaultBlocks} regions={regions} />
   );
 }

@@ -1,4 +1,10 @@
-export type BlockKind = "title" | "text" | "bullets" | "image" | "eyebrow";
+export type BlockKind =
+  | "title"
+  | "text"
+  | "bullets"
+  | "image"
+  | "eyebrow"
+  | "region";
 
 export interface Block {
   id: string;
@@ -6,6 +12,8 @@ export interface Block {
   text?: string | null;
   bullets?: string[] | null;
   imageUrl?: string | null;
+  /** For kind="region": named slot rendered from the slide's regions map. */
+  regionId?: string;
   /** Position & size as percentages of the 1920×1080 slide. */
   x: number;
   y: number;
