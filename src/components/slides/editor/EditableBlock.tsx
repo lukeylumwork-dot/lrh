@@ -423,6 +423,7 @@ export function EditableBlock({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleTextKeyDown}
             onBlur={() => {
               commitText(draft);
               setInlineEdit(false);
@@ -441,6 +442,7 @@ export function EditableBlock({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleTextKeyDown}
             onBlur={() => {
               commitText(draft);
               setInlineEdit(false);
@@ -459,6 +461,7 @@ export function EditableBlock({
             autoFocus
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleTextKeyDown}
             onBlur={() => {
               commitText(draft);
               setInlineEdit(false);
@@ -477,6 +480,11 @@ export function EditableBlock({
             onChange={(arr) => commitBullets(arr)}
             onCommit={(arr) => commitBullets(arr)}
             onExit={() => setInlineEdit(false)}
+            onExitDeck={() => {
+              setInlineEdit(false);
+              setEditing(false);
+              setSelectedBlockId(null);
+            }}
           />
         ) : (
           <ul className="space-y-3">
