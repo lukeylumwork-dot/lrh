@@ -67,17 +67,25 @@ export function EditorProvider({
     let cancelled = false;
     (async () => {
       try {
-        const [lrh, imp] = await Promise.all([
-          listOverrides({ data: { deckKind: "lrh" } }),
-          listOverrides({ data: { deckKind: "imported" } }),
+        const [lrhRes, impRes] = await Promise.all([
+          listOverrides({ data: { deckKind: "lrh" } }).catch((err) => {
+            console.error("[editor] listOverrides(lrh) failed", err);
+            return [] as OverrideDTO[];
+          }),
+          listOverrides({ data: { deckKind: "imported" } }).catch((err) => {
+            console.error("[editor] listOverrides(imported) failed", err);
+            return [] as OverrideDTO[];
+          }),
         ]);
         if (cancelled) return;
+        const lrh = Array.isArray(lrhRes) ? lrhRes : [];
+        const imp = Array.isArray(impRes) ? impRes : [];
         const map: Record<string, SlideOverride> = {};
         for (const r of [...lrh, ...imp] as OverrideDTO[]) {
           map[keyOf(r.deckKind, r.slideKey)] = {
             deckKind: r.deckKind,
             slideKey: r.slideKey,
-            blocks: r.blocks as Block[],
+            blocks: (r.blocks as Block[]) ?? [],
             highlightKeyword: r.highlightKeyword,
             layoutVariant: r.layoutVariant,
           };
