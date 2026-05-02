@@ -218,14 +218,7 @@ export function EditableBlock({
   }, [isSelected, deckKind, slideKey, defaults, updateOverride]);
 
   const [draft, setDraft] = useState<string>(block.text ?? "");
-  const [bulletDraft, setBulletDraft] = useState<string>(
-    (block.bullets ?? []).join("\n"),
-  );
   useEffect(() => setDraft(block.text ?? ""), [block.text]);
-  useEffect(
-    () => setBulletDraft((block.bullets ?? []).join("\n")),
-    [block.bullets],
-  );
 
   const commitText = useCallback(
     (val: string) => {
@@ -236,8 +229,7 @@ export function EditableBlock({
   );
 
   const commitBullets = useCallback(
-    (val: string) => {
-      const arr = val.split("\n").map((l) => l.trim()).filter(Boolean);
+    (arr: string[]) => {
       const cur = block.bullets ?? [];
       if (arr.length === cur.length && arr.every((v, i) => v === cur[i])) return;
       updateBlock(deckKind, slideKey, block.id, { bullets: arr }, defaults);
