@@ -185,6 +185,7 @@ export function EditableBlock({
 }: Props) {
   const {
     editing,
+    setEditing,
     selectedBlockId,
     setSelectedBlockId,
     updateBlock,
