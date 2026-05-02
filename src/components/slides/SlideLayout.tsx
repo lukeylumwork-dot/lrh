@@ -1,6 +1,17 @@
-import { ReactNode } from "react";
+import { ReactNode, Children, isValidElement } from "react";
 import { cn } from "@/lib/utils";
 import { textStyles } from "./brand";
+import { Highlighted } from "./Highlighted";
+
+/** Apply <Highlighted> to plain string children; pass through anything else. */
+function highlightChildren(children: ReactNode): ReactNode {
+  return Children.map(children, (child) => {
+    if (typeof child === "string") return <Highlighted>{child}</Highlighted>;
+    if (typeof child === "number") return child;
+    if (isValidElement(child)) return child;
+    return child;
+  });
+}
 
 interface SlideLayoutProps {
   children: ReactNode;
@@ -56,7 +67,7 @@ export function SlideTitle({
       {highlightPosition === "before" && highlight && (
         <span className="text-[var(--lrh-blue-500)]">{highlight} </span>
       )}
-      {children}
+      {highlightChildren(children)}
       {highlightPosition === "after" && highlight && (
         <span className="text-[var(--lrh-blue-500)]"> {highlight}</span>
       )}
@@ -79,7 +90,7 @@ export function SlideBody({ children, muted = false, className }: SlideBodyProps
         className,
       )}
     >
-      {children}
+      {highlightChildren(children)}
     </p>
   );
 }
