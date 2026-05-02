@@ -7,6 +7,8 @@ interface BulletsEditorProps {
   onChange: (next: string[]) => void;
   onCommit: (next: string[]) => void;
   onExit: () => void;
+  /** Cmd/Ctrl+Enter: commit and also leave canvas edit mode entirely. */
+  onExitDeck?: () => void;
 }
 
 /** Normalize: trim, drop blanks, collapse internal newlines to single bullets. */
