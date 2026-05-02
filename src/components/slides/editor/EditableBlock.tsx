@@ -182,11 +182,40 @@ export function EditableBlock({
   className,
   highlight,
 }: Props) {
-  const { editing, selectedBlockId, setSelectedBlockId, updateBlock } = useEditor();
+  const {
+    editing,
+    selectedBlockId,
+    setSelectedBlockId,
+    updateBlock,
+    updateOverride,
+  } = useEditor();
   const peers = useContext(Peers);
   const ref = useRef<HTMLDivElement>(null);
   const rect = useSlideRect(ref);
   const isSelected = editing && selectedBlockId === block.id;
+  const [inlineEdit, setInlineEdit] = useState(false);
+  useEffect(() => {
+    if (!isSelected) setInlineEdit(false);
+  }, [isSelected]);
+
+  // Cmd/Ctrl+K while a block is selected: set highlight keyword from current
+  // text selection (or clear it if nothing is selected).
+  useEffect(() => {
+    if (!isSelected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.key === "k" || e.key === "K") || !(e.metaKey || e.ctrlKey)) return;
+      e.preventDefault();
+      const sel = window.getSelection()?.toString().trim() ?? "";
+      updateOverride(
+        deckKind,
+        slideKey,
+        { highlightKeyword: sel || null },
+        defaults,
+      );
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isSelected, deckKind, slideKey, defaults, updateOverride]);
 
   const [draft, setDraft] = useState<string>(block.text ?? "");
   const [bulletDraft, setBulletDraft] = useState<string>(
