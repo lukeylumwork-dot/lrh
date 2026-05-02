@@ -475,10 +475,7 @@ export function EditableBlock({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
-            onBlur={() => {
-              commitText(draft);
-              setInlineEdit(false);
-            }}
+            onBlur={() => handleTextBlur(draft)}
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80"
           />
         ) : (
