@@ -28,6 +28,7 @@ export function BulletsEditor({
   onChange,
   onCommit,
   onExit,
+  onExitDeck,
 }: BulletsEditorProps) {
   const [items, setItems] = useState<string[]>(
     value.length ? value : [""],
