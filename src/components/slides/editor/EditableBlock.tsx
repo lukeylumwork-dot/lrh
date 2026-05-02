@@ -239,6 +239,23 @@ export function EditableBlock({
     [block.id, block.bullets, deckKind, slideKey, updateBlock, defaults],
   );
 
+  /** Cmd/Ctrl+Enter on text/title/eyebrow inline editors: commit + exit edit mode. */
+  const handleTextKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        commitText(e.currentTarget.value);
+        setInlineEdit(false);
+        setEditing(false);
+        setSelectedBlockId(null);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setInlineEdit(false);
+      }
+    },
+    [commitText, setEditing, setSelectedBlockId],
+  );
+
   // Drag --------------------------------------------------------------------
   const startDrag = useCallback(
     (e: React.MouseEvent) => {
