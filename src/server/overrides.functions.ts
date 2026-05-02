@@ -5,10 +5,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // Block model — kept in sync with src/components/slides/editor/types.ts
 const blockSchema = z.object({
   id: z.string().min(1).max(64),
-  kind: z.enum(["title", "text", "bullets", "image", "eyebrow"]),
+  kind: z.enum(["title", "text", "bullets", "image", "eyebrow", "region"]),
   text: z.string().max(20000).optional().nullable(),
   bullets: z.array(z.string().max(2000)).max(50).optional().nullable(),
   imageUrl: z.string().max(2000).optional().nullable(),
+  regionId: z.string().max(64).optional(),
   // Position/size in slide coordinate space (1920x1080 reference, %).
   x: z.number().min(-20).max(120),
   y: z.number().min(-20).max(120),
