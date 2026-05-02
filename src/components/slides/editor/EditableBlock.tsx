@@ -487,7 +487,7 @@ export function EditableBlock({
         return editingThis ? (
           <BulletsEditor
             value={block.bullets ?? []}
-            onChange={(arr) => commitBullets(arr)}
+            onChange={() => {}}
             onCommit={(arr) => commitBullets(arr)}
             onExit={() => setInlineEdit(false)}
             onExitDeck={() => {
