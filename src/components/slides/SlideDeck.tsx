@@ -4,15 +4,22 @@ import { cn } from "@/lib/utils";
 
 interface SlideDeckProps {
   slides: { id: string; node: ReactNode }[];
+  onIndexChange?: (index: number) => void;
 }
 
-export function SlideDeck({ slides }: SlideDeckProps) {
+export function SlideDeck({ slides, onIndexChange }: SlideDeckProps) {
   const [index, setIndex] = useState(0);
 
-  const go = (next: number) => setIndex(Math.max(0, Math.min(slides.length - 1, next)));
+  const go = (next: number) => {
+    const clamped = Math.max(0, Math.min(slides.length - 1, next));
+    setIndex(clamped);
+    onIndexChange?.(clamped);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (e.key === "ArrowRight" || e.key === " ") go(index + 1);
       if (e.key === "ArrowLeft") go(index - 1);
     };

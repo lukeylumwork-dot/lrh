@@ -1,56 +1,98 @@
-import { SlideLayout, SlideTitle } from "./SlideLayout";
+import { SlideLayout } from "./SlideLayout";
+import { EditableBlock } from "./editor/EditableBlock";
+import { useEditor } from "./editor/EditorContext";
+import type { Block } from "./editor/types";
 import type { ImportedSlideDTO } from "@/server/imports.functions";
 
 interface Props {
   slide: ImportedSlideDTO;
   total: number;
+  deckId: string;
 }
 
-export function ImportedSlide({ slide, total }: Props) {
+/** Build default editable blocks from a parsed imported slide. */
+export function defaultBlocksForImported(slide: ImportedSlideDTO): Block[] {
+  const blocks: Block[] = [];
   const hasImages = slide.image_urls.length > 0;
+  const textW = hasImages ? 55 : 80;
+
+  blocks.push({
+    id: "eyebrow",
+    kind: "eyebrow",
+    text: `Imported · Slide ${slide.index + 1}`,
+    x: 5,
+    y: 6,
+    w: 60,
+    h: 4,
+  });
+
+  if (slide.title) {
+    blocks.push({
+      id: "title",
+      kind: "title",
+      text: slide.title,
+      x: 5,
+      y: 13,
+      w: textW,
+      h: 14,
+    });
+  }
+
+  if (slide.bullets.length > 0) {
+    blocks.push({
+      id: "bullets",
+      kind: "bullets",
+      bullets: slide.bullets,
+      x: 5,
+      y: slide.title ? 30 : 14,
+      w: textW,
+      h: 60,
+    });
+  }
+
+  slide.image_urls.forEach((url, i) => {
+    const perRow = 1;
+    const top = 13 + i * (60 / Math.max(slide.image_urls.length, 1));
+    const h = Math.min(60 / Math.max(slide.image_urls.length, 1), 50);
+    blocks.push({
+      id: `image-${i}`,
+      kind: "image",
+      imageUrl: url,
+      x: 63,
+      y: top,
+      w: 32,
+      h,
+    });
+    void perRow;
+  });
+
+  return blocks;
+}
+
+export function ImportedSlide({ slide, total, deckId }: Props) {
+  const { getOverride } = useEditor();
+  const slideKey = `${deckId}:${slide.index}`;
+  const defaults = { blocks: defaultBlocksForImported(slide) };
+  const override = getOverride("imported", slideKey);
+  const blocks = override?.blocks ?? defaults.blocks;
+  const highlight = override?.highlightKeyword ?? null;
+
   return (
-    <SlideLayout>
-      <div className="flex items-center justify-between mb-8">
-        <span className="text-xs uppercase tracking-[0.18em] text-foreground/50">
-          Imported · Slide {slide.index + 1} of {total}
-        </span>
+    <SlideLayout className="!p-0">
+      <div className="absolute inset-0">
+        {blocks.map((b) => (
+          <EditableBlock
+            key={b.id}
+            deckKind="imported"
+            slideKey={slideKey}
+            block={b}
+            defaults={defaults}
+            highlight={highlight}
+          />
+        ))}
       </div>
-
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 min-h-0">
-        <div className={hasImages ? "lg:col-span-7 flex flex-col min-h-0" : "lg:col-span-12 flex flex-col min-h-0"}>
-          {slide.title && (
-            <SlideTitle className="mb-8 text-4xl md:text-5xl">{slide.title}</SlideTitle>
-          )}
-          {slide.bullets.length > 0 && (
-            <ul className="space-y-3 overflow-y-auto pr-4">
-              {slide.bullets.map((b, i) => (
-                <li
-                  key={i}
-                  className="flex gap-3 text-base md:text-lg leading-relaxed text-foreground/80"
-                >
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[var(--lrh-blue)] flex-shrink-0" />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {!slide.title && slide.bullets.length === 0 && (
-            <p className="text-foreground/40 italic">No text content extracted from this slide.</p>
-          )}
-        </div>
-
-        {hasImages && (
-          <div className="lg:col-span-5 grid grid-cols-1 gap-4 content-start overflow-y-auto">
-            {slide.image_urls.map((url, i) => (
-              <div
-                key={i}
-                className="rounded-md overflow-hidden border border-border bg-card"
-              >
-                <img src={url} alt="" className="w-full h-auto object-contain" />
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="absolute bottom-3 right-6 text-[10px] uppercase tracking-[0.18em] text-foreground/40 z-0 pointer-events-none">
+        {slide.index + 1} / {total}
       </div>
     </SlideLayout>
   );

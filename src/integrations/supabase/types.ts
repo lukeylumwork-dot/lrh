@@ -76,6 +76,42 @@ export type Database = {
           },
         ]
       }
+      slide_overrides: {
+        Row: {
+          blocks: Json
+          created_at: string
+          deck_kind: string
+          highlight_keyword: string | null
+          id: string
+          layout_variant: string | null
+          slide_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocks?: Json
+          created_at?: string
+          deck_kind: string
+          highlight_keyword?: string | null
+          id?: string
+          layout_variant?: string | null
+          slide_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocks?: Json
+          created_at?: string
+          deck_kind?: string
+          highlight_keyword?: string | null
+          id?: string
+          layout_variant?: string | null
+          slide_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
