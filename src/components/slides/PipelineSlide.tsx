@@ -39,27 +39,25 @@ export function PipelineSlide() {
       </div>
 
       <div className="flex-1 grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] gap-2 items-stretch">
-        {stages.map((stage, i) => (
-          <>
-            <SlideCard key={stage.label} className="flex flex-col">
-              <div className="flex flex-col items-center gap-2 pb-3 border-b border-border">
-                <IconPlaceholder icon={stage.icon} size="sm" variant="outline" />
-                <span className="font-heading font-bold text-sm uppercase tracking-wide">{stage.label}</span>
-              </div>
-              <ul className="flex-1 mt-3 space-y-1.5">
-                {stage.clients.slice(0, 5).map((c) => (
-                  <li key={c} className="text-xs text-foreground/80 truncate">{c}</li>
-                ))}
-              </ul>
-              <div className="text-xs text-[var(--lrh-blue)] font-medium pt-2">{stage.tag}</div>
-            </SlideCard>
-            {i < stages.length - 1 && (
-              <div className="flex items-center">
-                <ChevronRight className="text-[var(--lrh-blue)]" size={20} />
-              </div>
-            )}
-          </>
-        ))}
+        {stages.map((stage, i) => [
+          <SlideCard key={`${stage.label}-card`} className="flex flex-col">
+            <div className="flex flex-col items-center gap-2 pb-3 border-b border-border">
+              <IconPlaceholder icon={stage.icon} size="sm" variant="outline" />
+              <span className="font-heading font-bold text-sm uppercase tracking-wide">{stage.label}</span>
+            </div>
+            <ul className="flex-1 mt-3 space-y-1.5">
+              {stage.clients.slice(0, 5).map((c) => (
+                <li key={c} className="text-xs text-foreground/80 truncate">{c}</li>
+              ))}
+            </ul>
+            <div className="text-xs text-[var(--lrh-blue)] font-medium pt-2">{stage.tag}</div>
+          </SlideCard>,
+          i < stages.length - 1 ? (
+            <div key={`${stage.label}-arrow`} className="flex items-center">
+              <ChevronRight className="text-[var(--lrh-blue)]" size={20} />
+            </div>
+          ) : null,
+        ])}
       </div>
 
       <div className="pt-6 mt-6 border-t border-border flex justify-between text-xs text-foreground/50">
