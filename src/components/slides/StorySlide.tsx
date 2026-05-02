@@ -1,66 +1,91 @@
-import { SlideLayout, SlideTitle } from "@/components/slides/SlideLayout";
-import { SlideCard } from "@/components/slides/Card";
-import { LogoRow } from "@/components/slides/LogoRow";
-import { IconPlaceholder } from "@/components/slides/IconPlaceholder";
-import { Store, Target, Signpost, Check } from "lucide-react";
+import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
+import { SlideCard } from "./Card";
+import { CheckSquare } from "lucide-react";
+import { assets } from "./assets";
 
-const story = [
-  { icon: Store, title: "Market backdrop", body: "SFTR came into force in October 2020. All repo trades in the UK and EU must now be reported every single day." },
-  { icon: Target, title: "Our position", body: "We are the first to repurpose this data and bring transparency to a circa €20 trillion weekly market." },
-  { icon: Signpost, title: "Strategic direction", body: "We are building the dominant data layer for global repo markets." },
+const blocks = [
+  {
+    label: "Market Backdrop",
+    body: "SFTR came into force in October 2020, mandating that all UK & EU repo trades be reported daily by every market participant.",
+  },
+  {
+    label: "LRH Position",
+    body: "First to repurpose this data and bring transparency to a large yet historically opaque market — circa €20 trillion in outstandings per week.",
+  },
+  {
+    label: "Strategic Direction",
+    body: "Build the dominant data layer for global repo markets.",
+  },
 ];
 
 const achievements = [
   "World-class product fully deployed and production-ready",
   "Secured 6-figure contracts with 5 global Banking Groups",
   "Established pipeline of 55 major financial institutions",
-  "Partnership discussions with 8+ market infrastructure providers",
+  "Partnership discussions with 8+ market infrastructure providers (LSEG, Euroclear, ...)",
   "Ambitious roadmap to dominate the repo data market",
   "Excellent and highly motivated in-house team",
+];
+
+const logos: { src: string; alt: string }[] = [
+  { src: assets.logos.mufg, alt: "MUFG" },
+  { src: assets.logos.cba, alt: "Commonwealth Bank" },
+  { src: assets.logos.bmo, alt: "BMO" },
+  { src: assets.logos.cic, alt: "CIC" },
+  { src: assets.logos.td, alt: "TD" },
 ];
 
 export function StorySlide() {
   return (
     <SlideLayout>
-      <div className="mb-8">
-        <SlideTitle highlight="Story" highlightPosition="after">Our</SlideTitle>
-        <p className="text-lg text-foreground/70 mt-2">So far — traction and momentum</p>
-      </div>
+      <SlideEyebrow>Our Story So Far</SlideEyebrow>
+      <SlideTitle highlight="Momentum" highlightPosition="after" className="mb-8">
+        Traction &amp;
+      </SlideTitle>
 
-      <div className="flex-1 grid grid-cols-2 gap-8">
-        <div className="space-y-5">
-          {story.map((s) => (
-            <div key={s.title} className="flex gap-4">
-              <IconPlaceholder icon={s.icon} size="sm" variant="outline" />
-              <div className="space-y-1">
-                <h3 className="font-heading font-bold text-lg">{s.title}</h3>
-                <p className="text-sm text-foreground/70 leading-relaxed">{s.body}</p>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        <div className="lg:col-span-7 space-y-3">
+          {blocks.map((b) => (
+            <div key={b.label} className="border-l-2 border-[var(--lrh-blue)] pl-5 py-1">
+              <div className="text-xs uppercase tracking-[0.18em] text-[var(--lrh-blue)] font-medium mb-1">
+                {b.label}
               </div>
+              <p className="text-sm md:text-base text-foreground/80 leading-relaxed">{b.body}</p>
             </div>
           ))}
         </div>
 
-        <SlideCard variant="soft">
-          <h3 className="font-heading font-bold text-xl mb-4">Key achievements</h3>
-          <ul className="space-y-3">
-            {achievements.map((a) => (
-              <li key={a} className="flex gap-3 text-sm">
-                <Check size={18} className="text-[var(--lrh-blue)] shrink-0 mt-0.5" strokeWidth={2.5} />
-                <span className="text-foreground/85">{a}</span>
-              </li>
-            ))}
-          </ul>
-        </SlideCard>
+        <div className="lg:col-span-5">
+          <SlideCard variant="soft" className="h-full">
+            <div className="text-xs uppercase tracking-[0.18em] text-[var(--lrh-blue)] font-medium mb-4">
+              Key Achievements
+            </div>
+            <ul className="space-y-2.5">
+              {achievements.map((a) => (
+                <li key={a} className="flex gap-2.5 items-start text-sm text-foreground/85">
+                  <CheckSquare size={16} className="text-[var(--lrh-blue)] mt-0.5 flex-shrink-0" strokeWidth={2} />
+                  <span>{a}</span>
+                </li>
+              ))}
+            </ul>
+          </SlideCard>
+        </div>
       </div>
 
-      <div className="pt-8 mt-8">
-        <LogoRow logos={["MUFG", "CommBank", "BMO", "CIC", "TD Bank", "J.P. Morgan"]} />
+      <div className="pt-6 mt-6 border-t border-border">
+        <div className="text-[10px] uppercase tracking-[0.22em] text-foreground/45 mb-3">
+          Live Clients
+        </div>
+        <div className="grid grid-cols-5 gap-8 items-center">
+          {logos.map((l) => (
+            <div key={l.alt} className="flex items-center justify-center h-10">
+              <img src={l.src} alt={l.alt} className="max-h-full max-w-full object-contain" />
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="pt-6 mt-6 border-t border-border flex justify-between text-xs text-foreground/50">
-        <span>© London Reporting House 2026 · Private &amp; Confidential</span>
-        <span>5 / 6</span>
-      </div>
+      <SlideFooter page={6} />
     </SlideLayout>
   );
 }
