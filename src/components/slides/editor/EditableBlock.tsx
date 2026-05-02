@@ -453,17 +453,11 @@ export function EditableBlock({
         );
       case "bullets":
         return editingThis ? (
-          <textarea
-            data-block-edit
-            autoFocus
-            value={bulletDraft}
-            onChange={(e) => setBulletDraft(e.target.value)}
-            onBlur={() => {
-              commitBullets(bulletDraft);
-              setInlineEdit(false);
-            }}
-            placeholder="One bullet per line"
-            className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80 font-mono"
+          <BulletsEditor
+            value={block.bullets ?? []}
+            onChange={(arr) => commitBullets(arr)}
+            onCommit={(arr) => commitBullets(arr)}
+            onExit={() => setInlineEdit(false)}
           />
         ) : (
           <ul className="space-y-3">
