@@ -44,7 +44,34 @@ export function SlideKeywordProvider({
     return { keyword: fallback ?? null, deckKind, slideKey };
   }, [deckKind, slideKey, fallback, getOverride]);
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      {children}
+      <KeywordBadge keyword={value.keyword} />
+    </Ctx.Provider>
+  );
+}
+
+/**
+ * Small unobtrusive chip shown in the slide's top-right corner indicating
+ * the active highlight keyword for the slide. Hidden when no keyword is set.
+ */
+function KeywordBadge({ keyword }: { keyword: string | null }) {
+  if (!keyword) return null;
+  return (
+    <div
+      className="absolute top-3 right-3 z-20 pointer-events-none select-none flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] font-medium text-[var(--lrh-navy-700)] shadow-sm border border-[var(--lrh-surface-300)]"
+      title="Highlight keyword for this slide"
+    >
+      <span
+        aria-hidden
+        className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--lrh-blue-500)]"
+      />
+      <span className="text-[var(--lrh-blue-500)] normal-case tracking-normal text-[11px] font-semibold">
+        {keyword}
+      </span>
+    </div>
+  );
 }
 
 /** Read the active keyword for the surrounding slide. */
