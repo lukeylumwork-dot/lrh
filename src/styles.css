@@ -268,3 +268,75 @@
   --font-sans: "Inter", system-ui, sans-serif;
   --font-heading: "Be Vietnam Pro", system-ui, sans-serif;
 }
+
+/* ============================================================
+ * PDF Export — print stylesheet
+ *
+ * The .print-deck container holds every slide rendered at exact
+ * 1920x1080. It is hidden during normal use and revealed only
+ * for @media print (or when body.printing-deck is set as a fallback).
+ * ============================================================ */
+
+.print-deck {
+  display: none;
+}
+
+@page {
+  size: 1920px 1080px;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 1920px;
+    height: auto;
+  }
+
+  /* Hide the live (interactive) deck and all chrome. */
+  body > #root > * {
+    visibility: hidden !important;
+  }
+  .print-deck,
+  .print-deck * {
+    visibility: visible !important;
+  }
+
+  .deck-chrome,
+  .editor-toolbar,
+  .editor-side-panel,
+  [data-no-print],
+  .lrh-keyword-panel,
+  .deck-mode-toggle {
+    display: none !important;
+  }
+
+  .print-deck {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+  }
+
+  .print-slide {
+    position: relative !important;
+    width: 1920px !important;
+    height: 1080px !important;
+    overflow: hidden !important;
+    page-break-after: always;
+    break-after: page;
+    background: #fff;
+  }
+
+  /* Slides inside the print container are absolutely-positioned
+   * (SlideLayout uses `absolute inset-0`), so the relative wrapper
+   * above gives them a 1920x1080 box to fill. */
+  .print-slide > * {
+    position: absolute !important;
+    inset: 0 !important;
+  }
+}

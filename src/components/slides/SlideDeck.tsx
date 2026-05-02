@@ -149,10 +149,19 @@ export function SlideDeck({ slides, onIndexChange }: SlideDeckProps) {
         })}
       </div>
 
+      {/* Print-only deck: every slide laid out at exact 1920x1080. */}
+      <div className="print-deck" aria-hidden>
+        {slides.map((s) => (
+          <div key={`print-${s.id}`} className="print-slide">
+            {s.node}
+          </div>
+        ))}
+      </div>
+
       {/* Chrome */}
       <div
         className={cn(
-          "transition-opacity duration-300",
+          "deck-chrome transition-opacity duration-300",
           chromeVisible ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
       >
