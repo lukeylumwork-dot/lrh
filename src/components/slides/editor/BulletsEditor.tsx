@@ -172,7 +172,7 @@ export function BulletsEditor({
                     }
                   } else if (e.key === "Escape") {
                     e.preventDefault();
-                    commit();
+                    cancel();
                   }
                 }}
                 onPaste={(e) => {
