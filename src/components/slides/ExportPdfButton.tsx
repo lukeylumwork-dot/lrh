@@ -39,7 +39,7 @@ export function ExportPdfButton({ className }: ExportPdfButtonProps) {
       disabled={busy}
       aria-label="Export deck as PDF"
       className={cn(
-        "fixed top-4 right-16 z-30 h-9 px-3 rounded-full bg-card/90 backdrop-blur border border-border",
+        "deck-export-btn fixed bottom-5 left-5 z-30 h-9 px-3 rounded-full bg-card/90 backdrop-blur border border-border",
         "flex items-center gap-2 text-xs font-medium text-foreground",
         "hover:bg-[var(--lrh-soft-blue)]/40 transition-all hover:scale-105 active:scale-95",
         "disabled:opacity-60 disabled:cursor-wait",
