@@ -11,6 +11,7 @@ import {
 } from "react";
 import { cn } from "@/lib/utils";
 import { useEditor } from "./EditorContext";
+import { BulletsEditor } from "./BulletsEditor";
 import type { Block, DeckKind } from "./types";
 
 const SLIDE_W = 1920;
@@ -218,14 +219,7 @@ export function EditableBlock({
   }, [isSelected, deckKind, slideKey, defaults, updateOverride]);
 
   const [draft, setDraft] = useState<string>(block.text ?? "");
-  const [bulletDraft, setBulletDraft] = useState<string>(
-    (block.bullets ?? []).join("\n"),
-  );
   useEffect(() => setDraft(block.text ?? ""), [block.text]);
-  useEffect(
-    () => setBulletDraft((block.bullets ?? []).join("\n")),
-    [block.bullets],
-  );
 
   const commitText = useCallback(
     (val: string) => {
@@ -236,8 +230,7 @@ export function EditableBlock({
   );
 
   const commitBullets = useCallback(
-    (val: string) => {
-      const arr = val.split("\n").map((l) => l.trim()).filter(Boolean);
+    (arr: string[]) => {
       const cur = block.bullets ?? [];
       if (arr.length === cur.length && arr.every((v, i) => v === cur[i])) return;
       updateBlock(deckKind, slideKey, block.id, { bullets: arr }, defaults);
@@ -461,17 +454,11 @@ export function EditableBlock({
         );
       case "bullets":
         return editingThis ? (
-          <textarea
-            data-block-edit
-            autoFocus
-            value={bulletDraft}
-            onChange={(e) => setBulletDraft(e.target.value)}
-            onBlur={() => {
-              commitBullets(bulletDraft);
-              setInlineEdit(false);
-            }}
-            placeholder="One bullet per line"
-            className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80 font-mono"
+          <BulletsEditor
+            value={block.bullets ?? []}
+            onChange={(arr) => commitBullets(arr)}
+            onCommit={(arr) => commitBullets(arr)}
+            onExit={() => setInlineEdit(false)}
           />
         ) : (
           <ul className="space-y-3">
