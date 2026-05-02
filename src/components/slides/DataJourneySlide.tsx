@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { SlideLayout, SlideTitle, SlideEyebrow, SlideFooter } from "./SlideLayout";
 import { IconPlaceholder } from "./IconPlaceholder";
 import { Download, Filter, Shuffle, BrainCircuit, Send, ArrowRight } from "lucide-react";
@@ -41,18 +42,18 @@ export function DataJourneySlide() {
       <div className="flex-1 flex flex-col justify-center min-h-0">
         <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] gap-3 items-start">
           {stages.map((s, i) => (
-            <>
-              <div key={s.title} className="flex flex-col items-center text-center gap-3 px-2">
+            <Fragment key={s.title}>
+              <div className="flex flex-col items-center text-center gap-3 px-2">
                 <IconPlaceholder icon={s.icon} size="lg" />
                 <h3 className="font-heading font-bold text-sm md:text-base">{s.title}</h3>
                 <p className="text-xs text-foreground/70 leading-relaxed">{s.body}</p>
               </div>
               {i < stages.length - 1 && (
-                <div key={`arr-${i}`} className="flex items-center pt-7">
+                <div className="flex items-center pt-7">
                   <ArrowRight className="text-[var(--lrh-blue)]" size={22} strokeWidth={2} />
                 </div>
               )}
-            </>
+            </Fragment>
           ))}
         </div>
       </div>
