@@ -16,6 +16,8 @@ import { DeckModeToggle } from "@/components/slides/DeckModeToggle";
 import { EditorProvider, useEditor } from "@/components/slides/editor/EditorContext";
 import { EditorToolbar } from "@/components/slides/editor/EditorToolbar";
 import { EditorSidePanel } from "@/components/slides/editor/EditorSidePanel";
+import { LrhKeywordPanel } from "@/components/slides/editor/LrhKeywordPanel";
+import { SlideKeywordProvider } from "@/components/slides/Highlighted";
 import { supabase } from "@/integrations/supabase/client";
 import {
   parseAndSaveDeck,
@@ -36,7 +38,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const LRH_SLIDES = [
+const LRH_SLIDES: { id: string; node: React.ReactNode }[] = [
   { id: "title", node: <TitleSlide /> },
   { id: "problem", node: <ProblemSlide /> },
   { id: "solution", node: <SolutionSlide /> },
@@ -148,7 +150,16 @@ function DeckShell({
   }, [deck]);
 
   const slides = useMemo(() => {
-    if (mode === "lrh") return LRH_SLIDES;
+    if (mode === "lrh") {
+      return LRH_SLIDES.map((s) => ({
+        id: s.id,
+        node: (
+          <SlideKeywordProvider deckKind="lrh" slideKey={s.id}>
+            {s.node}
+          </SlideKeywordProvider>
+        ),
+      }));
+    }
     if (!deck || deck.slides.length === 0) {
       return [
         {
@@ -165,7 +176,11 @@ function DeckShell({
     }
     return deck.slides.map((s) => ({
       id: `imp-${deck.id}-${s.index}`,
-      node: <ImportedSlide slide={s} total={deck.slides.length} deckId={deck.id} />,
+      node: (
+        <SlideKeywordProvider deckKind="imported" slideKey={`${deck.id}:${s.index}`}>
+          <ImportedSlide slide={s} total={deck.slides.length} deckId={deck.id} />
+        </SlideKeywordProvider>
+      ),
     }));
   }, [mode, deck, handleUpload, authError]);
 
@@ -215,6 +230,15 @@ function DeckShell({
               layoutVariant={editorContext.layoutVariant}
             />
           )}
+        </>
+      )}
+      {mode === "lrh" && LRH_SLIDES[currentIndex] && (
+        <>
+          <EditorToolbar
+            deckKind="lrh"
+            currentSlideKey={LRH_SLIDES[currentIndex].id}
+          />
+          <LrhKeywordPanel slideKey={LRH_SLIDES[currentIndex].id} />
         </>
       )}
       {loading && mode === "imported" && (
