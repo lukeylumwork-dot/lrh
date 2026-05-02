@@ -11,6 +11,7 @@ import {
 } from "react";
 import { cn } from "@/lib/utils";
 import { useEditor } from "./EditorContext";
+import { BulletsEditor } from "./BulletsEditor";
 import type { Block, DeckKind } from "./types";
 
 const SLIDE_W = 1920;
