@@ -13,6 +13,7 @@ import {
 } from "@/components/slides/ImportedSlide";
 import { ImportEmptyState } from "@/components/slides/ImportEmptyState";
 import { DeckModeToggle } from "@/components/slides/DeckModeToggle";
+import { ExportPdfButton } from "@/components/slides/ExportPdfButton";
 import { EditorProvider, useEditor } from "@/components/slides/editor/EditorContext";
 import { EditorToolbar } from "@/components/slides/editor/EditorToolbar";
 import { EditorSidePanel } from "@/components/slides/editor/EditorSidePanel";
@@ -204,6 +205,7 @@ function DeckShell({
   return (
     <>
       <SlideDeck slides={slides} onIndexChange={setCurrentIndex} />
+      <ExportPdfButton />
       <DeckModeToggle
         mode={mode}
         onModeChange={(m) => {
