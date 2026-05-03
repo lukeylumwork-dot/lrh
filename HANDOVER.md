@@ -1,10 +1,3 @@
-
-## Deliverable
-
-Create a single `HANDOVER.md` at the project root containing the full technical handover below. No code/functionality changes. Approve this plan to have me write the file as-is (plus a copy to `/mnt/documents/HANDOVER.md` for download).
-
----
-
 # London Reporting House — Slide Deck App: Technical Handover
 
 ## 1. Current Architecture
@@ -195,14 +188,14 @@ Production deps of note (see `package.json` for full list):
 
 **App**
 - Wire up `QueryClientProvider` so deck/overrides fetching is cacheable and refetchable; or strip `react-query`.
-- Replace `window.fetch` monkey-patch with a TanStack server-fn `createIsomorphicFn`/middleware-based token forwarder if/when supported.
+- Replace `window.fetch` monkey-patch with a TanStack server-fn middleware-based token forwarder if/when supported.
 - Add error boundaries (`errorComponent` on the index route, `defaultErrorComponent` on the router).
-- Add structured logging (`pino`-style or simple wrapper) instead of `console.error`.
+- Add structured logging instead of `console.error`.
 - Add request-id propagation to server functions.
 - Add Sentry (or similar) for client + Worker error reporting.
 - Add tests: parser fixtures (one PPTX, one PDF), `upsertOverride` schema validation, an editor reducer test.
 - Run `bunx tsc --noEmit` + `eslint` in CI.
-- Run the Supabase linter (`supabase--linter`) before each release.
+- Run the Supabase linter before each release.
 - Set `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy` headers via Worker response middleware.
 
 **Performance / cost**
@@ -232,7 +225,7 @@ Production deps of note (see `package.json` for full list):
 6. Configure Site URL and additional Redirect URLs to match your production domain.
 
 ### C. Vercel
-1. Import the GitHub repo. Framework preset: **Other** (Vite). Build command: `bun run build`. Output: managed by TanStack/Cloudflare plugin — see notes.
+1. Import the GitHub repo. Framework preset: **Other** (Vite). Build command: `bun run build`.
 2. **Important**: this project is configured for the Cloudflare Worker runtime via `@cloudflare/vite-plugin` and `wrangler.jsonc`. To deploy to Vercel you must either:
    - **Option A (recommended)**: deploy to Cloudflare Workers using `wrangler deploy` — this matches dev/preview behaviour exactly.
    - **Option B**: switch the SSR target to Vercel by replacing `@cloudflare/vite-plugin` with the TanStack Start Vercel preset, removing `wrangler.jsonc`, and re-testing all server functions (parsers may still work; verify in production logs).
@@ -244,12 +237,8 @@ Production deps of note (see `package.json` for full list):
 6. Watch SSR logs for `[unenv] not implemented` or `__dirname is not defined` — these would mean a dependency is incompatible with the chosen runtime.
 
 ### D. Pre-launch
-- Run `supabase--linter`.
+- Run the Supabase linter.
 - Run a security scan (RLS coverage, public buckets).
 - Verify upload size limits server-side.
 - Confirm logo/image licensing.
 - Tag a release in Git.
-
----
-
-After approval I will write this content verbatim to `HANDOVER.md` (project root) and `/mnt/documents/HANDOVER.md`. No code or config changes.
