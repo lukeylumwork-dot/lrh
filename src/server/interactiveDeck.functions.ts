@@ -27,7 +27,7 @@ export interface HotspotDTO {
   w: number;
   h: number;
   action_type: string;
-  action_payload: Record<string, unknown>;
+  action_payload: Record<string, any>;
   label: string | null;
 }
 
@@ -113,7 +113,7 @@ export const getDeckBundle = createServerFn({ method: "GET" })
         slides: (slides ?? []) as DeckSlideDTO[],
         hotspots: ((hotspots ?? []) as unknown as HotspotDTO[]).map((h) => ({
           ...h,
-          action_payload: (h.action_payload ?? {}) as Record<string, unknown>,
+          action_payload: (h.action_payload ?? {}) as Record<string, any>,
         })),
       };
     },
@@ -205,7 +205,7 @@ export const upsertHotspot = createServerFn({ method: "POST" })
       w: Number(out.w),
       h: Number(out.h),
       action_type: out.action_type,
-      action_payload: (out.action_payload ?? {}) as Record<string, unknown>,
+      action_payload: (out.action_payload ?? {}) as Record<string, any>,
       label: out.label,
     };
   });
