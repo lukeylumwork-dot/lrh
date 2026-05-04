@@ -35,7 +35,7 @@ function DeckViewerPage() {
       .then((b) => {
         setBundle(b);
         const variants = Array.from(new Set(b.slides.map((s) => s.variant)));
-        if (variants.length && !variants.includes("default")) setVariant(variants[0]);
+        if (variants.length && !variants.includes("Light")) setVariant(variants[0]);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [authReady, deckId]);
