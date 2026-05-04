@@ -64,7 +64,7 @@ function AdminPage() {
   }, [authReady, deckId]);
 
   const variants = useMemo(() => {
-    const set = new Set<string>(["default"]);
+    const set = new Set<string>(["Light"]);
     bundle?.slides.forEach((s) => set.add(s.variant));
     return Array.from(set).sort();
   }, [bundle]);
