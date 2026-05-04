@@ -27,7 +27,7 @@ function DeckViewerPage() {
     hotspots: HotspotDTO[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [variant, setVariant] = useState("default");
+  const [variant, setVariant] = useState("Light");
 
   useEffect(() => {
     if (!authReady) return;
