@@ -14,6 +14,130 @@ export type Database = {
   }
   public: {
     Tables: {
+      deck_slides: {
+        Row: {
+          created_at: string
+          deck_id: string
+          height: number | null
+          id: string
+          image_url: string
+          slide_index: number
+          variant: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          deck_id: string
+          height?: number | null
+          id?: string
+          image_url: string
+          slide_index: number
+          variant?: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          deck_id?: string
+          height?: number | null
+          id?: string
+          image_url?: string
+          slide_index?: number
+          variant?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_slides_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decks: {
+        Row: {
+          created_at: string
+          id: string
+          is_public: boolean
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hotspots: {
+        Row: {
+          action_payload: Json
+          action_type: string
+          created_at: string
+          deck_id: string
+          h: number
+          id: string
+          label: string | null
+          slide_index: number
+          updated_at: string
+          variant: string
+          w: number
+          x: number
+          y: number
+        }
+        Insert: {
+          action_payload?: Json
+          action_type?: string
+          created_at?: string
+          deck_id: string
+          h?: number
+          id?: string
+          label?: string | null
+          slide_index: number
+          updated_at?: string
+          variant?: string
+          w?: number
+          x: number
+          y: number
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: string
+          created_at?: string
+          deck_id?: string
+          h?: number
+          id?: string
+          label?: string | null
+          slide_index?: number
+          updated_at?: string
+          variant?: string
+          w?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotspots_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       imported_decks: {
         Row: {
           created_at: string
