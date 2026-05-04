@@ -60,11 +60,13 @@ function DeckViewerPage() {
           <h1 className="text-base font-medium">{bundle.deck.title}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <VariantToggle
-            variants={variants.length ? variants : ["default"]}
-            current={variant}
-            onChange={setVariant}
-          />
+          {variants.length > 1 && (
+            <VariantToggle
+              variants={variants}
+              current={variant}
+              onChange={setVariant}
+            />
+          )}
           <Button asChild variant="outline" size="sm">
             <Link
               to="/interactive-deck/admin/$deckId"
