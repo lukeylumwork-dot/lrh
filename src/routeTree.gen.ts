@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InteractiveDeckIndexRouteImport } from './routes/interactive-deck.index'
+import { Route as InteractiveDeckDeckIdRouteImport } from './routes/interactive-deck.$deckId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InteractiveDeckIndexRoute = InteractiveDeckIndexRouteImport.update({
+  id: '/interactive-deck/',
+  path: '/interactive-deck/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InteractiveDeckDeckIdRoute = InteractiveDeckDeckIdRouteImport.update({
+  id: '/interactive-deck/$deckId',
+  path: '/interactive-deck/$deckId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/interactive-deck/$deckId': typeof InteractiveDeckDeckIdRoute
+  '/interactive-deck/': typeof InteractiveDeckIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/interactive-deck/$deckId': typeof InteractiveDeckDeckIdRoute
+  '/interactive-deck': typeof InteractiveDeckIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/interactive-deck/$deckId': typeof InteractiveDeckDeckIdRoute
+  '/interactive-deck/': typeof InteractiveDeckIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/interactive-deck/$deckId' | '/interactive-deck/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/interactive-deck/$deckId' | '/interactive-deck'
+  id: '__root__' | '/' | '/interactive-deck/$deckId' | '/interactive-deck/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InteractiveDeckDeckIdRoute: typeof InteractiveDeckDeckIdRoute
+  InteractiveDeckIndexRoute: typeof InteractiveDeckIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/interactive-deck/': {
+      id: '/interactive-deck/'
+      path: '/interactive-deck'
+      fullPath: '/interactive-deck/'
+      preLoaderRoute: typeof InteractiveDeckIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interactive-deck/$deckId': {
+      id: '/interactive-deck/$deckId'
+      path: '/interactive-deck/$deckId'
+      fullPath: '/interactive-deck/$deckId'
+      preLoaderRoute: typeof InteractiveDeckDeckIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InteractiveDeckDeckIdRoute: InteractiveDeckDeckIdRoute,
+  InteractiveDeckIndexRoute: InteractiveDeckIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
