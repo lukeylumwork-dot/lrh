@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
 import { Hotspot } from "./Hotspot";
 import { HotspotModal } from "./HotspotModal";
@@ -34,22 +34,60 @@ export function DeckViewer({
 
   const [index, setIndex] = useState(0);
   const [modal, setModal] = useState<{ title: string; body: string } | null>(null);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
 
   useEffect(() => {
     setIndex(0);
   }, [variant]);
 
+  const goNext = () =>
+    setIndex((i) => {
+      const next = Math.min(i + 1, variantSlides.length - 1);
+      if (next !== i) setDirection(1);
+      return next;
+    });
+  const goPrev = () =>
+    setIndex((i) => {
+      const next = Math.max(i - 1, 0);
+      if (next !== i) setDirection(-1);
+      return next;
+    });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (e.key === "ArrowRight" || e.key === " ") {
-        setIndex((i) => Math.min(i + 1, variantSlides.length - 1));
+        e.preventDefault();
+        goNext();
       } else if (e.key === "ArrowLeft") {
-        setIndex((i) => Math.max(i - 1, 0));
+        e.preventDefault();
+        goPrev();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantSlides.length]);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    const dt = Date.now() - start.t;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 600) {
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+  };
 
   if (variantSlides.length === 0) {
     return (
@@ -73,7 +111,10 @@ export function DeckViewer({
       const target = Number((h.action_payload as { slide?: unknown })?.slide);
       if (Number.isFinite(target)) {
         const i = variantSlides.findIndex((s) => s.slide_index === target);
-        if (i >= 0) setIndex(i);
+        if (i >= 0) {
+          setDirection(i > index ? 1 : -1);
+          setIndex(i);
+        }
       }
     } else if (h.action_type === "open_url" || h.action_type === "link") {
       const raw = String((h.action_payload as { url?: unknown })?.url ?? "").trim();
@@ -90,32 +131,42 @@ export function DeckViewer({
   return (
     <div className="flex w-full flex-col items-center gap-4">
       <div
-        className="relative w-full max-w-6xl overflow-hidden rounded-lg border bg-black"
+        className="relative w-full max-w-6xl select-none overflow-hidden rounded-lg border bg-black"
         style={{ aspectRatio: "16 / 9" }}
         onClick={(e) => onSlideClick?.(e, current.slide_index)}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
-        <img
-          src={current.image_url}
-          alt={`Slide ${current.slide_index + 1}`}
-          className="absolute inset-0 h-full w-full object-contain"
-          draggable={false}
-        />
-        {currentHotspots.map((h) => (
-          <Hotspot
-            key={h.id}
-            hotspot={h}
-            onActivate={handleHotspot}
-            showOutline={showHotspotOutlines}
-            selected={selectedHotspotId === h.id}
+        <div
+          key={`${variant}-${current.id}`}
+          className="absolute inset-0 animate-in fade-in duration-300"
+          style={{
+            animationName: direction === 1 ? "slide-in-right" : "slide-in-left",
+          }}
+        >
+          <img
+            src={current.image_url}
+            alt={`Slide ${current.slide_index + 1}`}
+            className="absolute inset-0 h-full w-full object-contain"
+            draggable={false}
           />
-        ))}
+          {currentHotspots.map((h) => (
+            <Hotspot
+              key={h.id}
+              hotspot={h}
+              onActivate={handleHotspot}
+              showOutline={showHotspotOutlines}
+              selected={selectedHotspotId === h.id}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setIndex((i) => Math.max(i - 1, 0))}
+          onClick={goPrev}
           disabled={index === 0}
           aria-label="Previous slide"
         >
@@ -127,9 +178,7 @@ export function DeckViewer({
         <Button
           variant="outline"
           size="icon"
-          onClick={() =>
-            setIndex((i) => Math.min(i + 1, variantSlides.length - 1))
-          }
+          onClick={goNext}
           disabled={index === variantSlides.length - 1}
           aria-label="Next slide"
         >
