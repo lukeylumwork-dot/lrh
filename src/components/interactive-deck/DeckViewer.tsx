@@ -75,9 +75,12 @@ export function DeckViewer({
         const i = variantSlides.findIndex((s) => s.slide_index === target);
         if (i >= 0) setIndex(i);
       }
-    } else if (h.action_type === "open_url") {
-      const url = String((h.action_payload as { url?: unknown })?.url ?? "");
-      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } else if (h.action_type === "open_url" || h.action_type === "link") {
+      const raw = String((h.action_payload as { url?: unknown })?.url ?? "").trim();
+      if (raw) {
+        const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
     } else if (h.action_type === "open_modal") {
       const p = h.action_payload as { title?: string; body?: string };
       setModal({ title: p?.title ?? h.label ?? "Details", body: p?.body ?? "" });
