@@ -247,7 +247,7 @@ function AdminPage() {
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading…" : `Upload to "${variant}"`}
+              {uploading ? "Uploading…" : `Upload slides${variant ? ` (${variant})` : ""}`}
             </Button>
             <input
               ref={fileRef}
