@@ -218,10 +218,10 @@ function AdminPage() {
             onChange={setVariant}
           />
           <Input
-            placeholder="Add variant…"
+            placeholder="Add slide version"
             value={variantInput}
             onChange={(e) => setVariantInput(e.target.value)}
-            className="w-36"
+            className="w-44"
           />
           <Button
             size="sm"
