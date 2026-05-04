@@ -66,26 +66,30 @@ function Index() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Lazy import to keep this client-only.
-    import("@/integrations/supabase/install-fetch-auth").then((m) =>
-      m.installServerFnAuth(),
-    );
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
     (async () => {
+      try {
+        // Install fetch interceptor BEFORE any server fn call.
+        const m = await import("@/integrations/supabase/install-fetch-auth");
+        m.installServerFnAuth();
+      } catch (err) {
+        console.warn("[index] failed to install fetch auth", err);
+      }
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        const { error } = await supabase.auth.signInAnonymously();
-        if (error && !cancelled) {
-          setAuthError(
-            "Anonymous sign-in is disabled for this project. Enable it in Cloud → Users → Auth settings → General."
-          );
+      let session = data.session;
+      if (!session) {
+        const { data: signInData, error } = await supabase.auth.signInAnonymously();
+        if (error) {
+          if (!cancelled) {
+            setAuthError(
+              "Anonymous sign-in is disabled for this project. Enable it in Cloud → Users → Auth settings → General."
+            );
+          }
           return;
         }
+        session = signInData.session;
       }
-      if (!cancelled) setAuthReady(true);
+      if (!cancelled && session?.access_token) setAuthReady(true);
     })();
     return () => {
       cancelled = true;
