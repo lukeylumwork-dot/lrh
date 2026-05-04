@@ -13,15 +13,16 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected }: Props) {
     <button
       type="button"
       aria-label={hotspot.label ?? "Hotspot"}
+      title={hotspot.label ?? undefined}
       onClick={(e) => {
         e.stopPropagation();
         onActivate(hotspot);
       }}
       className={cn(
-        "absolute cursor-pointer transition-colors",
+        "absolute cursor-pointer rounded-sm transition-all duration-150",
         showOutline
-          ? "border-2 border-primary/70 bg-primary/10 hover:bg-primary/20"
-          : "bg-transparent hover:bg-primary/10",
+          ? "border-2 border-primary/70 bg-primary/10 hover:bg-primary/25"
+          : "bg-transparent ring-0 hover:bg-white/10 hover:ring-2 hover:ring-white/40 hover:shadow-lg",
         selected && "ring-2 ring-primary",
       )}
       style={{

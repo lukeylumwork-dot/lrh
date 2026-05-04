@@ -44,7 +44,7 @@ function AdminPage() {
     slides: DeckSlideDTO[];
     hotspots: HotspotDTO[];
   } | null>(null);
-  const [variant, setVariant] = useState("default");
+  const [variant, setVariant] = useState("Light");
   const [variantInput, setVariantInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -64,7 +64,7 @@ function AdminPage() {
   }, [authReady, deckId]);
 
   const variants = useMemo(() => {
-    const set = new Set<string>(["default"]);
+    const set = new Set<string>(["Light"]);
     bundle?.slides.forEach((s) => set.add(s.variant));
     return Array.from(set).sort();
   }, [bundle]);
@@ -218,10 +218,10 @@ function AdminPage() {
             onChange={setVariant}
           />
           <Input
-            placeholder="Add variant…"
+            placeholder="Add slide version"
             value={variantInput}
             onChange={(e) => setVariantInput(e.target.value)}
-            className="w-36"
+            className="w-44"
           />
           <Button
             size="sm"
@@ -247,7 +247,7 @@ function AdminPage() {
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading…" : `Upload to "${variant}"`}
+              {uploading ? "Uploading…" : `Upload slides${variant ? ` (${variant})` : ""}`}
             </Button>
             <input
               ref={fileRef}

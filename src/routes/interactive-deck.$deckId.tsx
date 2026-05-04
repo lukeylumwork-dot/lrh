@@ -27,7 +27,7 @@ function DeckViewerPage() {
     hotspots: HotspotDTO[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [variant, setVariant] = useState("default");
+  const [variant, setVariant] = useState("Light");
 
   useEffect(() => {
     if (!authReady) return;
@@ -35,7 +35,7 @@ function DeckViewerPage() {
       .then((b) => {
         setBundle(b);
         const variants = Array.from(new Set(b.slides.map((s) => s.variant)));
-        if (variants.length && !variants.includes("default")) setVariant(variants[0]);
+        if (variants.length && !variants.includes("Light")) setVariant(variants[0]);
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [authReady, deckId]);
@@ -60,11 +60,13 @@ function DeckViewerPage() {
           <h1 className="text-base font-medium">{bundle.deck.title}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <VariantToggle
-            variants={variants.length ? variants : ["default"]}
-            current={variant}
-            onChange={setVariant}
-          />
+          {variants.length > 1 && (
+            <VariantToggle
+              variants={variants}
+              current={variant}
+              onChange={setVariant}
+            />
+          )}
           <Button asChild variant="outline" size="sm">
             <Link
               to="/interactive-deck/admin/$deckId"
