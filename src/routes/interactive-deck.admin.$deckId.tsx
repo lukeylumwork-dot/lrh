@@ -44,7 +44,7 @@ function AdminPage() {
     slides: DeckSlideDTO[];
     hotspots: HotspotDTO[];
   } | null>(null);
-  const [variant, setVariant] = useState("default");
+  const [variant, setVariant] = useState("Light");
   const [variantInput, setVariantInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
