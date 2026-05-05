@@ -45,7 +45,7 @@ function AdminPage() {
     hotspots: HotspotDTO[];
   } | null>(null);
   const [variant, setVariant] = useState("Light");
-  const [variantInput, setVariantInput] = useState("");
+  
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [placing, setPlacing] = useState(false);
@@ -207,7 +207,7 @@ function AdminPage() {
               to="/interactive-deck/$deckId"
               params={{ deckId: bundle.deck.id }}
             >
-              View
+              View deck
             </Link>
           </Button>
         </div>
@@ -228,7 +228,7 @@ function AdminPage() {
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading…" : `Upload slides${variant ? ` (${variant})` : ""}`}
+              {uploading ? "Uploading…" : "Upload slides"}
             </Button>
             <input
               ref={fileRef}
