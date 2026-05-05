@@ -45,7 +45,7 @@ function AdminPage() {
     hotspots: HotspotDTO[];
   } | null>(null);
   const [variant, setVariant] = useState("Light");
-  const [variantInput, setVariantInput] = useState("");
+  
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [placing, setPlacing] = useState(false);
@@ -207,36 +207,17 @@ function AdminPage() {
               to="/interactive-deck/$deckId"
               params={{ deckId: bundle.deck.id }}
             >
-              View
+              View deck
             </Link>
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        {variants.length > 1 && (
           <VariantToggle
             variants={variants}
             current={variant}
             onChange={setVariant}
           />
-          <Input
-            placeholder="Add slide version"
-            value={variantInput}
-            onChange={(e) => setVariantInput(e.target.value)}
-            className="w-44"
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const v = variantInput.trim();
-              if (v) {
-                setVariant(v);
-                setVariantInput("");
-              }
-            }}
-          >
-            Add
-          </Button>
-        </div>
+        )}
       </header>
 
       <div className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
@@ -247,7 +228,7 @@ function AdminPage() {
               disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Uploading…" : `Upload slides${variant ? ` (${variant})` : ""}`}
+              {uploading ? "Uploading…" : "Upload slides"}
             </Button>
             <input
               ref={fileRef}
