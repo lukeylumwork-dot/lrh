@@ -346,7 +346,7 @@ function HotspotEditor({
       </div>
 
       <div className="space-y-1">
-        <Label>Label</Label>
+        <Label>Admin label</Label>
         <Input
           value={hotspot.label ?? ""}
           onChange={(e) => onChange({ label: e.target.value })}
@@ -370,7 +370,7 @@ function HotspotEditor({
       </div>
 
       <div className="space-y-1">
-        <Label>Action</Label>
+        <Label>Hotspot action</Label>
         <Select
           value={hotspot.action_type}
           onValueChange={(v) =>
@@ -382,7 +382,7 @@ function HotspotEditor({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="open_modal">Open modal</SelectItem>
-            <SelectItem value="open_url">Open URL</SelectItem>
+            <SelectItem value="open_url">Open external URL</SelectItem>
             <SelectItem value="goto_slide">Go to slide</SelectItem>
           </SelectContent>
         </Select>
@@ -426,6 +426,9 @@ function HotspotEditor({
               onChange({ action_payload: { url: e.target.value } })
             }
           />
+          <p className="text-xs text-muted-foreground">
+            Example: https://londonreportinghouse.com or www.google.com
+          </p>
         </div>
       )}
 
