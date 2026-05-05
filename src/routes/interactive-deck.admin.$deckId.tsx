@@ -211,32 +211,13 @@ function AdminPage() {
             </Link>
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        {variants.length > 1 && (
           <VariantToggle
             variants={variants}
             current={variant}
             onChange={setVariant}
           />
-          <Input
-            placeholder="Add slide version"
-            value={variantInput}
-            onChange={(e) => setVariantInput(e.target.value)}
-            className="w-44"
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const v = variantInput.trim();
-              if (v) {
-                setVariant(v);
-                setVariantInput("");
-              }
-            }}
-          >
-            Add
-          </Button>
-        </div>
+        )}
       </header>
 
       <div className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
