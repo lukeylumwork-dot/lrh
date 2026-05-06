@@ -10,8 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  checkSlideQuality,
+  type SlideQualityReport,
+} from "@/lib/slideQualityCheck";
 
 export const Route = createFileRoute("/interactive-deck/")({
   head: () => ({
@@ -30,7 +34,10 @@ type RenderedSlide = {
   width: number;
   height: number;
   label: string;
+  quality: SlideQualityReport;
 };
+
+const TARGET_WIDTH = 1920;
 
 function DeckIndexPage() {
   const { authReady, authError } = useAnonAuth();
@@ -87,19 +94,29 @@ function DeckIndexPage() {
       }
       const { renderPdfToPngBlobs } = await import("@/lib/pdfToImages");
       const pages = await renderPdfToPngBlobs(file, {
-        targetWidth: 1920,
+        targetWidth: TARGET_WIDTH,
         onProgress: (i, total) => setImportStatus(`Rendering page ${i} / ${total}…`),
       });
       const baseName = file.name.replace(/\.pdf$/i, "");
       if (!pdfTitle.trim()) setPdfTitle(baseName);
-      const rendered: RenderedSlide[] = pages.map((p, i) => ({
-        tempId: crypto.randomUUID(),
-        blob: p.blob,
-        previewUrl: URL.createObjectURL(p.blob),
-        width: p.width,
-        height: p.height,
-        label: `Slide ${i + 1}`,
-      }));
+
+      const rendered: RenderedSlide[] = [];
+      for (let i = 0; i < pages.length; i++) {
+        setImportStatus(`Checking quality ${i + 1} / ${pages.length}…`);
+        const p = pages[i];
+        const quality = await checkSlideQuality(p.blob, p.width, p.height, {
+          targetWidth: TARGET_WIDTH,
+        });
+        rendered.push({
+          tempId: crypto.randomUUID(),
+          blob: p.blob,
+          previewUrl: URL.createObjectURL(p.blob),
+          width: p.width,
+          height: p.height,
+          label: `Slide ${i + 1}`,
+          quality,
+        });
+      }
       setReviewSlides(rendered);
       setImportStatus(null);
     } catch (e) {
@@ -147,8 +164,25 @@ function DeckIndexPage() {
     });
   };
 
-  const confirmAndSave = async () => {
+  const qualitySummary = (() => {
+    if (!reviewSlides) return { errors: 0, warnings: 0 };
+    let errors = 0;
+    let warnings = 0;
+    for (const s of reviewSlides) {
+      if (s.quality.worst === "error") errors++;
+      else if (s.quality.worst === "warning") warnings++;
+    }
+    return { errors, warnings };
+  })();
+
+  const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
+    if (qualitySummary.errors > 0 && !force) {
+      setImportError(
+        `${qualitySummary.errors} slide(s) failed the export-quality check. Fix or remove them, or click "Save anyway".`,
+      );
+      return;
+    }
     setSaving(true);
     setImportError(null);
     try {
@@ -268,6 +302,8 @@ function DeckIndexPage() {
               </p>
             </div>
 
+            <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
+
             <ul className="divide-y rounded-md border">
               {reviewSlides.map((s, idx) => (
                 <li key={s.tempId} className="flex items-center gap-3 p-2">
@@ -284,13 +320,15 @@ function DeckIndexPage() {
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <Input
-                    value={s.label}
-                    onChange={(e) => renameSlide(idx, e.target.value)}
-                    placeholder={`Slide ${idx + 1}`}
-                    disabled={saving}
-                    className="flex-1"
-                  />
+                  <div className="flex flex-1 flex-col gap-1">
+                    <Input
+                      value={s.label}
+                      onChange={(e) => renameSlide(idx, e.target.value)}
+                      placeholder={`Slide ${idx + 1}`}
+                      disabled={saving}
+                    />
+                    <SlideQualityBadge report={s.quality} />
+                  </div>
                   <div className="flex shrink-0 gap-1">
                     <Button
                       variant="ghost"
@@ -328,7 +366,19 @@ function DeckIndexPage() {
               <Button variant="outline" onClick={cancelReview} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={confirmAndSave} disabled={saving || reviewSlides.length === 0}>
+              {qualitySummary.errors > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => void confirmAndSave(true)}
+                  disabled={saving}
+                >
+                  Save anyway
+                </Button>
+              )}
+              <Button
+                onClick={() => void confirmAndSave(false)}
+                disabled={saving || reviewSlides.length === 0 || qualitySummary.errors > 0}
+              >
                 {saving ? "Saving…" : `Save deck (${reviewSlides.length} slides)`}
               </Button>
             </div>
@@ -396,3 +446,52 @@ function ErrorScreen({ message }: { message: string }) {
     </div>
   );
 }
+
+function QualityBanner({ errors, warnings }: { errors: number; warnings: number }) {
+  if (errors === 0 && warnings === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 text-xs text-emerald-700 dark:text-emerald-400">
+        <CheckCircle2 className="h-4 w-4" />
+        All slides passed the export-quality check (1920px, 16:9, content detected).
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-md border p-2 text-xs ${
+        errors > 0
+          ? "border-destructive/30 bg-destructive/5 text-destructive"
+          : "border-yellow-500/30 bg-yellow-500/5 text-yellow-700 dark:text-yellow-400"
+      }`}
+    >
+      {errors > 0 ? <XCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+      <span>
+        Quality check: {errors} error{errors === 1 ? "" : "s"}, {warnings} warning
+        {warnings === 1 ? "" : "s"}.
+        {errors > 0 ? " Fix or remove flagged slides before saving." : ""}
+      </span>
+    </div>
+  );
+}
+
+function SlideQualityBadge({ report }: { report: SlideQualityReport }) {
+  if (report.worst === "ok") {
+    return (
+      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+        {report.width}×{report.height} · OK
+      </p>
+    );
+  }
+  const Icon = report.worst === "error" ? XCircle : AlertTriangle;
+  const color = report.worst === "error" ? "text-destructive" : "text-yellow-600 dark:text-yellow-400";
+  return (
+    <div className={`flex items-start gap-1 text-[11px] ${color}`}>
+      <Icon className="mt-0.5 h-3 w-3 shrink-0" />
+      <span>
+        {report.width}×{report.height} · {report.issues.map((i) => i.message).join(" ")}
+      </span>
+    </div>
+  );
+}
+
