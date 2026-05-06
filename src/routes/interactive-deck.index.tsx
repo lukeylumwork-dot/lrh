@@ -446,3 +446,52 @@ function ErrorScreen({ message }: { message: string }) {
     </div>
   );
 }
+
+function QualityBanner({ errors, warnings }: { errors: number; warnings: number }) {
+  if (errors === 0 && warnings === 0) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2 text-xs text-emerald-700 dark:text-emerald-400">
+        <CheckCircle2 className="h-4 w-4" />
+        All slides passed the export-quality check (1920px, 16:9, content detected).
+      </div>
+    );
+  }
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-md border p-2 text-xs ${
+        errors > 0
+          ? "border-destructive/30 bg-destructive/5 text-destructive"
+          : "border-yellow-500/30 bg-yellow-500/5 text-yellow-700 dark:text-yellow-400"
+      }`}
+    >
+      {errors > 0 ? <XCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+      <span>
+        Quality check: {errors} error{errors === 1 ? "" : "s"}, {warnings} warning
+        {warnings === 1 ? "" : "s"}.
+        {errors > 0 ? " Fix or remove flagged slides before saving." : ""}
+      </span>
+    </div>
+  );
+}
+
+function SlideQualityBadge({ report }: { report: SlideQualityReport }) {
+  if (report.worst === "ok") {
+    return (
+      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+        {report.width}×{report.height} · OK
+      </p>
+    );
+  }
+  const Icon = report.worst === "error" ? XCircle : AlertTriangle;
+  const color = report.worst === "error" ? "text-destructive" : "text-yellow-600 dark:text-yellow-400";
+  return (
+    <div className={`flex items-start gap-1 text-[11px] ${color}`}>
+      <Icon className="mt-0.5 h-3 w-3 shrink-0" />
+      <span>
+        {report.width}×{report.height} · {report.issues.map((i) => i.message).join(" ")}
+      </span>
+    </div>
+  );
+}
+
