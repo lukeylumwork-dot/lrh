@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAnonAuth } from "@/components/interactive-deck/useAnonAuth";
 import {
   getDeckBundle,
+  setDeckPublic,
   upsertSlide,
   deleteSlide,
   upsertHotspot,
