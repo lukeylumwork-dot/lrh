@@ -302,6 +302,8 @@ function DeckIndexPage() {
               </p>
             </div>
 
+            <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
+
             <ul className="divide-y rounded-md border">
               {reviewSlides.map((s, idx) => (
                 <li key={s.tempId} className="flex items-center gap-3 p-2">
