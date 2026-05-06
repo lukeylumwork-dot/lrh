@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   getPublicDeck,
+  logDeckAccessEvent,
   type DeckSlideDTO,
   type HotspotDTO,
   type DeckDTO,
@@ -39,8 +40,29 @@ function PublicDeckPage() {
         setBundle(b);
         const variants = Array.from(new Set(b.slides.map((s) => s.variant)));
         if (variants.length && !variants.includes("Light")) setVariant(variants[0]);
+        if (b.slides.length === 0) {
+          void logDeckAccessEvent({
+            data: {
+              deckId,
+              deckTitle: b.deck.title,
+              errorType: "no_slides",
+              errorMessage: null,
+            },
+          }).catch(() => {});
+        }
       })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e) => {
+        const msg = e instanceof Error ? e.message : String(e);
+        setError(msg);
+        const errorType: "private" | "not_found" | "error" = /private/i.test(msg)
+          ? "private"
+          : /does not exist|not found|no rows/i.test(msg)
+            ? "not_found"
+            : "error";
+        void logDeckAccessEvent({
+          data: { deckId, deckTitle: null, errorType, errorMessage: msg },
+        }).catch(() => {});
+      });
   }, [deckId]);
 
   const variants = useMemo(

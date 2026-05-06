@@ -292,3 +292,30 @@ export const getPublicDeck = createServerFn({ method: "GET" })
       };
     },
   );
+
+export const logDeckAccessEvent = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        deckId: z.string().nullable().optional(),
+        deckTitle: z.string().nullable().optional(),
+        errorType: z.enum(["private", "not_found", "no_slides", "error"]),
+        errorMessage: z.string().nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) return { ok: false };
+    const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    await supabase.from("deck_access_events").insert({
+      deck_id: data.deckId ?? null,
+      deck_title: data.deckTitle ?? null,
+      error_type: data.errorType,
+      error_message: data.errorMessage ?? null,
+    });
+    return { ok: true };
+  });
