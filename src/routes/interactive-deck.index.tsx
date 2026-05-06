@@ -320,13 +320,15 @@ function DeckIndexPage() {
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <Input
-                    value={s.label}
-                    onChange={(e) => renameSlide(idx, e.target.value)}
-                    placeholder={`Slide ${idx + 1}`}
-                    disabled={saving}
-                    className="flex-1"
-                  />
+                  <div className="flex flex-1 flex-col gap-1">
+                    <Input
+                      value={s.label}
+                      onChange={(e) => renameSlide(idx, e.target.value)}
+                      placeholder={`Slide ${idx + 1}`}
+                      disabled={saving}
+                    />
+                    <SlideQualityBadge report={s.quality} />
+                  </div>
                   <div className="flex shrink-0 gap-1">
                     <Button
                       variant="ghost"
