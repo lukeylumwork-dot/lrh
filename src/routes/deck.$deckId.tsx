@@ -54,8 +54,9 @@ function PublicDeckPage() {
     if (isPrivate) {
       return (
         <ErrorScreen
-          emoji="🔒"
-          title="This deck is private"
+          eyebrow="Access restricted"
+          title="This deck is"
+          highlight="private"
           message="The owner hasn't made this deck publicly viewable. If you believe you should have access, please ask them to share a public link."
         />
       );
@@ -63,16 +64,18 @@ function PublicDeckPage() {
     if (isMissing) {
       return (
         <ErrorScreen
-          emoji="🔍"
-          title="Deck not found"
+          eyebrow="404"
+          title="Deck"
+          highlight="not found"
           message="We couldn't find a deck with this link. Double-check the URL or ask the sender for an updated link."
         />
       );
     }
     return (
       <ErrorScreen
-        emoji="⚠️"
-        title="Something went wrong"
+        eyebrow="Error"
+        title="Something went"
+        highlight="wrong"
         message={error}
       />
     );
@@ -82,8 +85,9 @@ function PublicDeckPage() {
   if (bundle.slides.length === 0) {
     return (
       <ErrorScreen
-        emoji="🖼️"
-        title={bundle.deck.title}
+        eyebrow={bundle.deck.title}
+        title="No slides"
+        highlight="uploaded yet"
         message="This deck doesn't have any slides yet. Please check back soon."
       />
     );
