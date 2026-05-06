@@ -198,7 +198,7 @@ function AdminPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button asChild variant="ghost" size="sm">
             <Link to="/interactive-deck">← Decks</Link>
           </Button>
@@ -211,6 +211,36 @@ function AdminPage() {
               View deck
             </Link>
           </Button>
+          <Button
+            variant={bundle.deck.is_public ? "default" : "outline"}
+            size="sm"
+            onClick={async () => {
+              try {
+                const d = await setDeckPublic({
+                  data: { deckId: bundle.deck.id, isPublic: !bundle.deck.is_public },
+                });
+                setBundle((b) => (b ? { ...b, deck: d } : b));
+                toast.success(d.is_public ? "Deck is now public" : "Deck is now private");
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : String(e));
+              }
+            }}
+          >
+            {bundle.deck.is_public ? "Public" : "Private"}
+          </Button>
+          {bundle.deck.is_public && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const url = `${window.location.origin}/deck/${bundle.deck.id}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Public link copied");
+              }}
+            >
+              Copy public link
+            </Button>
+          )}
         </div>
         {variants.length > 1 && (
           <VariantToggle
