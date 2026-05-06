@@ -166,12 +166,16 @@ function ErrorScreen({
   highlight,
   message,
   action,
+  deckTitle,
+  deckId,
 }: {
   eyebrow: string;
   title: string;
   highlight?: string;
   message: ReactNode;
   action?: ReactNode;
+  deckTitle?: string;
+  deckId?: string;
 }) {
   return (
     <div
