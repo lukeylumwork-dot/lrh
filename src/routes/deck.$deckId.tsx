@@ -9,6 +9,7 @@ import {
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   SlideLayout,
   SlideEyebrow,
