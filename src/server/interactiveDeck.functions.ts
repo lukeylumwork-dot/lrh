@@ -62,6 +62,51 @@ export const createDeck = createServerFn({ method: "POST" })
     return row as DeckDTO;
   });
 
+export const createDeckFromImages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        title: z.string().min(1).max(200),
+        slides: z
+          .array(
+            z.object({
+              image_url: z.string().url().max(2048),
+              width: z.number().int().min(1).max(20000),
+              height: z.number().int().min(1).max(20000),
+            }),
+          )
+          .min(1)
+          .max(200),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ deckId: string }> => {
+    const { supabase, userId } = context;
+    const { data: deck, error: deckErr } = await supabase
+      .from("decks")
+      .insert({ user_id: userId, title: data.title })
+      .select("id")
+      .single();
+    if (deckErr || !deck) throw new Error(deckErr?.message ?? "Failed to create deck");
+
+    const rows = data.slides.map((s, i) => ({
+      deck_id: deck.id,
+      variant: "Light",
+      slide_index: i,
+      image_url: s.image_url,
+      width: s.width,
+      height: s.height,
+    }));
+    const { error: sErr } = await supabase.from("deck_slides").insert(rows);
+    if (sErr) {
+      // Best-effort cleanup so we don't leave an empty deck behind.
+      await supabase.from("decks").delete().eq("id", deck.id);
+      throw new Error(sErr.message);
+    }
+    return { deckId: deck.id };
+  });
+
 export const deleteDeck = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ deckId: z.string().uuid() }).parse(input))
