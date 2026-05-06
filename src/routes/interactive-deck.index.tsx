@@ -164,8 +164,25 @@ function DeckIndexPage() {
     });
   };
 
-  const confirmAndSave = async () => {
+  const qualitySummary = (() => {
+    if (!reviewSlides) return { errors: 0, warnings: 0 };
+    let errors = 0;
+    let warnings = 0;
+    for (const s of reviewSlides) {
+      if (s.quality.worst === "error") errors++;
+      else if (s.quality.worst === "warning") warnings++;
+    }
+    return { errors, warnings };
+  })();
+
+  const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
+    if (qualitySummary.errors > 0 && !force) {
+      setImportError(
+        `${qualitySummary.errors} slide(s) failed the export-quality check. Fix or remove them, or click "Save anyway".`,
+      );
+      return;
+    }
     setSaving(true);
     setImportError(null);
     try {
