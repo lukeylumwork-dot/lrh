@@ -369,6 +369,11 @@ function DeckIndexPage() {
                       disabled={saving}
                     />
                     <SlideQualityBadge report={s.quality} />
+                    {duplicateLabels.has(s.label.trim().toLowerCase()) && (
+                      <p className="flex items-center gap-1 text-[11px] text-yellow-600 dark:text-yellow-400">
+                        <AlertTriangle className="h-3 w-3" /> Duplicate label
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Button
