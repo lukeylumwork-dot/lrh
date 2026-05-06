@@ -132,23 +132,47 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 function ErrorScreen({
-  emoji,
+  eyebrow,
   title,
+  highlight,
   message,
+  action,
 }: {
-  emoji: string;
+  eyebrow: string;
   title: string;
-  message: string;
+  highlight?: string;
+  message: ReactNode;
+  action?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="max-w-md space-y-4 text-center">
-        <div className="text-5xl" aria-hidden>
-          {emoji}
+    <div
+      className="relative min-h-screen w-full overflow-hidden"
+      style={{ aspectRatio: "auto" }}
+    >
+      <SlideLayout>
+        <div className="grid h-full grid-cols-12 gap-[var(--lrh-space-5)] items-center">
+          <div className="col-span-12 md:col-span-7 md:col-start-2">
+            <SlideEyebrow>{eyebrow}</SlideEyebrow>
+            <SlideTitle highlight={highlight} highlightPosition="after">
+              {title}
+            </SlideTitle>
+            <SlideBody muted className="mt-[var(--lrh-space-4)]">
+              {message}
+            </SlideBody>
+            {action && <div className="mt-[var(--lrh-space-5)]">{action}</div>}
+          </div>
+          <div className="hidden md:col-span-3 md:block">
+            <SlideCard variant="soft" className="h-full">
+              <p className="text-xs uppercase tracking-[0.16em] text-[var(--lrh-navy-500)]">
+                London Reporting House
+              </p>
+              <p className="mt-2 text-sm text-[var(--lrh-navy-700)]">
+                Private &amp; Confidential
+              </p>
+            </SlideCard>
+          </div>
         </div>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        <p className="text-sm text-muted-foreground">{message}</p>
-      </div>
+      </SlideLayout>
     </div>
   );
 }
