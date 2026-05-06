@@ -81,7 +81,7 @@ function PublicDeckPage() {
       />
     );
   }
-  if (!bundle) return <Centered>Loading…</Centered>;
+  if (!bundle) return <DeckSkeleton />;
 
   if (bundle.slides.length === 0) {
     return (
