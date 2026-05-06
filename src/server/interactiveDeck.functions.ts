@@ -18,6 +18,7 @@ export interface DeckSlideDTO {
   image_url: string;
   width: number | null;
   height: number | null;
+  label: string | null;
 }
 
 export interface HotspotDTO {
