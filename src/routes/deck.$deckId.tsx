@@ -123,3 +123,25 @@ function Centered({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+function ErrorScreen({
+  emoji,
+  title,
+  message,
+}: {
+  emoji: string;
+  title: string;
+  message: string;
+}) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-6">
+      <div className="max-w-md space-y-4 text-center">
+        <div className="text-5xl" aria-hidden>
+          {emoji}
+        </div>
+        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+        <p className="text-sm text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  );
+}
