@@ -75,6 +75,7 @@ export const createDeckFromImages = createServerFn({ method: "POST" })
               image_url: z.string().url().max(2048),
               width: z.number().int().min(1).max(20000),
               height: z.number().int().min(1).max(20000),
+              label: z.string().max(200).nullable().optional(),
             }),
           )
           .min(1)
@@ -98,6 +99,7 @@ export const createDeckFromImages = createServerFn({ method: "POST" })
       image_url: s.image_url,
       width: s.width,
       height: s.height,
+      label: s.label ?? null,
     }));
     const { error: sErr } = await supabase.from("deck_slides").insert(rows);
     if (sErr) {
