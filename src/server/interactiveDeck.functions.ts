@@ -210,6 +210,61 @@ export const deleteSlide = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const renameSlide = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        slideId: z.string().uuid(),
+        label: z.string().max(200).nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("deck_slides")
+      .update({ label: data.label })
+      .eq("id", data.slideId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reorderSlides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        deckId: z.string().uuid(),
+        variant: z.string().min(1).max(40),
+        orderedSlideIds: z.array(z.string().uuid()).min(1).max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // Two-phase to avoid unique-constraint collisions on (deck_id,variant,slide_index)
+    const offset = 10000;
+    for (let i = 0; i < data.orderedSlideIds.length; i++) {
+      const { error } = await supabase
+        .from("deck_slides")
+        .update({ slide_index: offset + i })
+        .eq("id", data.orderedSlideIds[i])
+        .eq("deck_id", data.deckId)
+        .eq("variant", data.variant);
+      if (error) throw new Error(error.message);
+    }
+    for (let i = 0; i < data.orderedSlideIds.length; i++) {
+      const { error } = await supabase
+        .from("deck_slides")
+        .update({ slide_index: i })
+        .eq("id", data.orderedSlideIds[i])
+        .eq("deck_id", data.deckId)
+        .eq("variant", data.variant);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
 const hotspotInputSchema = z.object({
   id: z.string().uuid().optional(),
   deckId: z.string().uuid(),
