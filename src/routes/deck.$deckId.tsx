@@ -128,6 +128,30 @@ function PublicDeckPage() {
   );
 }
 
+function DeckSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="flex items-center justify-between border-b px-6 py-3">
+        <Skeleton className="h-5 w-48" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </header>
+      <main className="flex justify-center p-6">
+        <div className="flex w-full max-w-6xl flex-col items-center gap-4">
+          <Skeleton className="aspect-video w-full rounded-lg" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-9 w-9" />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function Centered({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center p-6 text-sm text-muted-foreground">
