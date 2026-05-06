@@ -9,6 +9,7 @@ import {
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   SlideLayout,
   SlideEyebrow,
@@ -80,7 +81,7 @@ function PublicDeckPage() {
       />
     );
   }
-  if (!bundle) return <Centered>Loading…</Centered>;
+  if (!bundle) return <DeckSkeleton />;
 
   if (bundle.slides.length === 0) {
     return (
@@ -122,6 +123,30 @@ function PublicDeckPage() {
           hotspots={bundle.hotspots}
           variant={variant}
         />
+      </main>
+    </div>
+  );
+}
+
+function DeckSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="flex items-center justify-between border-b px-6 py-3">
+        <Skeleton className="h-5 w-48" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+      </header>
+      <main className="flex justify-center p-6">
+        <div className="flex w-full max-w-6xl flex-col items-center gap-4">
+          <Skeleton className="aspect-video w-full rounded-lg" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-9 w-9" />
+          </div>
+        </div>
       </main>
     </div>
   );
