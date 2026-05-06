@@ -10,8 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  checkSlideQuality,
+  type SlideQualityReport,
+} from "@/lib/slideQualityCheck";
 
 export const Route = createFileRoute("/interactive-deck/")({
   head: () => ({
