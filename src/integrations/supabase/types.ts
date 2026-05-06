@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      deck_access_events: {
+        Row: {
+          created_at: string
+          deck_id: string | null
+          deck_title: string | null
+          error_message: string | null
+          error_type: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          deck_id?: string | null
+          deck_title?: string | null
+          error_message?: string | null
+          error_type: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          deck_id?: string | null
+          deck_title?: string | null
+          error_message?: string | null
+          error_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       deck_slides: {
         Row: {
           created_at: string
