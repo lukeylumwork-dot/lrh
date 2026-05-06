@@ -175,6 +175,36 @@ function DeckIndexPage() {
     return { errors, warnings };
   })();
 
+  const duplicateLabels = (() => {
+    const counts = new Map<string, number>();
+    if (!reviewSlides) return counts;
+    for (const s of reviewSlides) {
+      const key = s.label.trim().toLowerCase();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    // Keep only labels appearing more than once.
+    for (const [k, n] of counts) if (n < 2) counts.delete(k);
+    return counts;
+  })();
+  const duplicateCount = duplicateLabels.size;
+
+  const autoRenameDuplicates = () => {
+    setReviewSlides((prev) => {
+      if (!prev) return prev;
+      const seen = new Map<string, number>();
+      return prev.map((s, i) => {
+        const base = s.label.trim() || `Slide ${i + 1}`;
+        const key = base.toLowerCase();
+        const n = (seen.get(key) ?? 0) + 1;
+        seen.set(key, n);
+        // First occurrence keeps its name; later ones get a numeric suffix.
+        return n === 1 ? { ...s, label: base } : { ...s, label: `${base} (${n})` };
+      });
+    });
+    toast.success("Renamed duplicate slide labels");
+  };
+
   const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
     if (qualitySummary.errors > 0 && !force) {
