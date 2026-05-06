@@ -42,30 +42,43 @@ function PublicDeckPage() {
   );
 
   if (error) {
-    const isPrivate = /private|does not exist/i.test(error);
+    const isPrivate = /private/i.test(error);
+    const isMissing = /does not exist|not found|no rows/i.test(error);
+    if (isPrivate) {
+      return (
+        <ErrorScreen
+          emoji="🔒"
+          title="This deck is private"
+          message="The owner hasn't made this deck publicly viewable. If you believe you should have access, please ask them to share a public link."
+        />
+      );
+    }
+    if (isMissing) {
+      return (
+        <ErrorScreen
+          emoji="🔍"
+          title="Deck not found"
+          message="We couldn't find a deck with this link. Double-check the URL or ask the sender for an updated link."
+        />
+      );
+    }
     return (
-      <Centered>
-        <div className="space-y-2 text-center">
-          <h1 className="text-lg font-medium text-foreground">
-            {isPrivate ? "This deck isn't available" : "Something went wrong"}
-          </h1>
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </Centered>
+      <ErrorScreen
+        emoji="⚠️"
+        title="Something went wrong"
+        message={error}
+      />
     );
   }
   if (!bundle) return <Centered>Loading…</Centered>;
 
   if (bundle.slides.length === 0) {
     return (
-      <Centered>
-        <div className="space-y-2 text-center">
-          <h1 className="text-lg font-medium text-foreground">{bundle.deck.title}</h1>
-          <p className="text-sm text-muted-foreground">
-            No slides have been uploaded for this deck yet.
-          </p>
-        </div>
-      </Centered>
+      <ErrorScreen
+        emoji="🖼️"
+        title={bundle.deck.title}
+        message="This deck doesn't have any slides yet. Please check back soon."
+      />
     );
   }
 
