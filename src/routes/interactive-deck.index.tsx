@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/interactive-deck/")({
   head: () => ({
@@ -20,6 +22,15 @@ export const Route = createFileRoute("/interactive-deck/")({
   }),
   component: DeckIndexPage,
 });
+
+type RenderedSlide = {
+  tempId: string;
+  blob: Blob;
+  previewUrl: string;
+  width: number;
+  height: number;
+  label: string;
+};
 
 function DeckIndexPage() {
   const { authReady, authError } = useAnonAuth();
@@ -35,6 +46,8 @@ function DeckIndexPage() {
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [reviewSlides, setReviewSlides] = useState<RenderedSlide[] | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!authReady) return;
@@ -42,6 +55,13 @@ function DeckIndexPage() {
       .then(setDecks)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [authReady]);
+
+  // Cleanup blob URLs on unmount or when review changes.
+  useEffect(() => {
+    return () => {
+      reviewSlides?.forEach((s) => URL.revokeObjectURL(s.previewUrl));
+    };
+  }, [reviewSlides]);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -57,7 +77,7 @@ function DeckIndexPage() {
     }
   };
 
-  const handlePdfImport = async (file: File) => {
+  const handlePdfPick = async (file: File) => {
     setImportError(null);
     setImporting(true);
     setImportStatus("Reading PDF…");
@@ -65,48 +85,120 @@ function DeckIndexPage() {
       if (file.size > 100 * 1024 * 1024) {
         throw new Error("PDF is larger than 100 MB. Please split it first.");
       }
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes.user) throw new Error("You must be signed in.");
-      const userId = userRes.user.id;
-
       const { renderPdfToPngBlobs } = await import("@/lib/pdfToImages");
       const pages = await renderPdfToPngBlobs(file, {
         targetWidth: 1920,
         onProgress: (i, total) => setImportStatus(`Rendering page ${i} / ${total}…`),
       });
-
-      const importId = crypto.randomUUID();
-      const uploaded: { image_url: string; width: number; height: number }[] = [];
-      for (let i = 0; i < pages.length; i++) {
-        setImportStatus(`Uploading slide ${i + 1} / ${pages.length}…`);
-        const p = pages[i];
-        const path = `${userId}/imports/${importId}/slide-${String(i + 1).padStart(3, "0")}.png`;
-        const { error: upErr } = await supabase.storage
-          .from("interactive-deck-slides")
-          .upload(path, p.blob, { contentType: "image/png", upsert: false });
-        if (upErr) throw new Error(`Upload failed on slide ${i + 1}: ${upErr.message}`);
-        const { data: pub } = supabase.storage
-          .from("interactive-deck-slides")
-          .getPublicUrl(path);
-        uploaded.push({ image_url: pub.publicUrl, width: p.width, height: p.height });
-      }
-
-      setImportStatus("Saving deck…");
-      const finalTitle =
-        pdfTitle.trim() || file.name.replace(/\.pdf$/i, "") || "Imported Deck";
-      const { deckId } = await createDeckFromImages({
-        data: { title: finalTitle, slides: uploaded },
-      });
-
+      const baseName = file.name.replace(/\.pdf$/i, "");
+      if (!pdfTitle.trim()) setPdfTitle(baseName);
+      const rendered: RenderedSlide[] = pages.map((p, i) => ({
+        tempId: crypto.randomUUID(),
+        blob: p.blob,
+        previewUrl: URL.createObjectURL(p.blob),
+        width: p.width,
+        height: p.height,
+        label: `Slide ${i + 1}`,
+      }));
+      setReviewSlides(rendered);
       setImportStatus(null);
-      setPdfTitle("");
-      if (fileRef.current) fileRef.current.value = "";
-      navigate({ to: "/interactive-deck/admin/$deckId", params: { deckId } });
     } catch (e) {
       setImportError(e instanceof Error ? e.message : String(e));
       setImportStatus(null);
     } finally {
       setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const cancelReview = () => {
+    reviewSlides?.forEach((s) => URL.revokeObjectURL(s.previewUrl));
+    setReviewSlides(null);
+    setPdfTitle("");
+  };
+
+  const moveSlide = (idx: number, dir: -1 | 1) => {
+    setReviewSlides((prev) => {
+      if (!prev) return prev;
+      const j = idx + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = prev.slice();
+      [next[idx], next[j]] = [next[j], next[idx]];
+      return next;
+    });
+  };
+
+  const removeSlide = (idx: number) => {
+    setReviewSlides((prev) => {
+      if (!prev) return prev;
+      URL.revokeObjectURL(prev[idx].previewUrl);
+      const next = prev.slice();
+      next.splice(idx, 1);
+      return next.length ? next : null;
+    });
+  };
+
+  const renameSlide = (idx: number, label: string) => {
+    setReviewSlides((prev) => {
+      if (!prev) return prev;
+      const next = prev.slice();
+      next[idx] = { ...next[idx], label };
+      return next;
+    });
+  };
+
+  const confirmAndSave = async () => {
+    if (!reviewSlides || reviewSlides.length === 0) return;
+    setSaving(true);
+    setImportError(null);
+    try {
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userRes.user) throw new Error("You must be signed in.");
+      const userId = userRes.user.id;
+
+      const importId = crypto.randomUUID();
+      const uploaded: {
+        image_url: string;
+        width: number;
+        height: number;
+        label: string | null;
+      }[] = [];
+      for (let i = 0; i < reviewSlides.length; i++) {
+        setImportStatus(`Uploading slide ${i + 1} / ${reviewSlides.length}…`);
+        const s = reviewSlides[i];
+        const path = `${userId}/imports/${importId}/slide-${String(i + 1).padStart(3, "0")}.png`;
+        const { error: upErr } = await supabase.storage
+          .from("interactive-deck-slides")
+          .upload(path, s.blob, { contentType: "image/png", upsert: false });
+        if (upErr) throw new Error(`Upload failed on slide ${i + 1}: ${upErr.message}`);
+        const { data: pub } = supabase.storage
+          .from("interactive-deck-slides")
+          .getPublicUrl(path);
+        uploaded.push({
+          image_url: pub.publicUrl,
+          width: s.width,
+          height: s.height,
+          label: s.label.trim() || null,
+        });
+      }
+
+      setImportStatus("Saving deck…");
+      const finalTitle = pdfTitle.trim() || "Imported Deck";
+      const { deckId } = await createDeckFromImages({
+        data: { title: finalTitle, slides: uploaded },
+      });
+
+      reviewSlides.forEach((s) => URL.revokeObjectURL(s.previewUrl));
+      setReviewSlides(null);
+      setPdfTitle("");
+      setImportStatus(null);
+      toast.success("Deck imported");
+      navigate({ to: "/interactive-deck/admin/$deckId", params: { deckId } });
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : String(e));
+      setImportStatus(null);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -125,36 +217,123 @@ function DeckIndexPage() {
         </div>
       </header>
 
-      <section className="rounded-md border p-4 space-y-3">
+      <section className="space-y-3 rounded-md border p-4">
         <div>
           <h2 className="text-base font-medium">Import from PDF</h2>
           <p className="text-xs text-muted-foreground">
-            Each PDF page becomes one slide (rendered at 1920px, PNG).
+            Each PDF page becomes one slide (rendered at 1920px, PNG). You'll be able to
+            review, rename, reorder, and remove slides before saving.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            placeholder="Deck title (optional — defaults to filename)"
-            value={pdfTitle}
-            onChange={(e) => setPdfTitle(e.target.value)}
-            disabled={importing}
-          />
-          <Input
-            ref={fileRef}
-            type="file"
-            accept="application/pdf"
-            disabled={!authReady || importing}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void handlePdfImport(f);
-            }}
-            className="sm:max-w-xs"
-          />
-        </div>
+
+        {!reviewSlides && (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              placeholder="Deck title (optional — defaults to filename)"
+              value={pdfTitle}
+              onChange={(e) => setPdfTitle(e.target.value)}
+              disabled={importing}
+            />
+            <Input
+              ref={fileRef}
+              type="file"
+              accept="application/pdf"
+              disabled={!authReady || importing}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handlePdfPick(f);
+              }}
+              className="sm:max-w-xs"
+            />
+          </div>
+        )}
+
         {importStatus && (
           <p className="text-sm text-muted-foreground">{importStatus}</p>
         )}
         {importError && <p className="text-sm text-destructive">{importError}</p>}
+
+        {reviewSlides && (
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Input
+                placeholder="Deck title"
+                value={pdfTitle}
+                onChange={(e) => setPdfTitle(e.target.value)}
+                disabled={saving}
+                className="sm:max-w-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                {reviewSlides.length} slide{reviewSlides.length === 1 ? "" : "s"} ready
+              </p>
+            </div>
+
+            <ul className="divide-y rounded-md border">
+              {reviewSlides.map((s, idx) => (
+                <li key={s.tempId} className="flex items-center gap-3 p-2">
+                  <span className="w-8 shrink-0 text-center text-xs text-muted-foreground">
+                    {idx + 1}
+                  </span>
+                  <div
+                    className="shrink-0 overflow-hidden rounded border bg-muted"
+                    style={{ width: 96, aspectRatio: "16 / 9" }}
+                  >
+                    <img
+                      src={s.previewUrl}
+                      alt={`Slide ${idx + 1} preview`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <Input
+                    value={s.label}
+                    onChange={(e) => renameSlide(idx, e.target.value)}
+                    placeholder={`Slide ${idx + 1}`}
+                    disabled={saving}
+                    className="flex-1"
+                  />
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => moveSlide(idx, -1)}
+                      disabled={saving || idx === 0}
+                      aria-label="Move up"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => moveSlide(idx, 1)}
+                      disabled={saving || idx === reviewSlides.length - 1}
+                      aria-label="Move down"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSlide(idx)}
+                      disabled={saving}
+                      aria-label="Remove slide"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={cancelReview} disabled={saving}>
+                Cancel
+              </Button>
+              <Button onClick={confirmAndSave} disabled={saving || reviewSlides.length === 0}>
+                {saving ? "Saving…" : `Save deck (${reviewSlides.length} slides)`}
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
 
       <div className="flex gap-2">
