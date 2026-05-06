@@ -223,3 +223,72 @@ export const deleteHotspot = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const setDeckPublic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ deckId: z.string().uuid(), isPublic: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<DeckDTO> => {
+    const { supabase, userId } = context;
+    const { data: row, error } = await supabase
+      .from("decks")
+      .update({ is_public: data.isPublic })
+      .eq("id", data.deckId)
+      .eq("user_id", userId)
+      .select("id,title,is_public,created_at")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Failed to update deck");
+    return row as DeckDTO;
+  });
+
+export const getPublicDeck = createServerFn({ method: "GET" })
+  .inputValidator((input) => z.object({ deckId: z.string().uuid() }).parse(input))
+  .handler(
+    async ({
+      data,
+    }): Promise<{ deck: DeckDTO; slides: DeckSlideDTO[]; hotspots: HotspotDTO[] }> => {
+      const SUPABASE_URL = process.env.SUPABASE_URL;
+      const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+      if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+        throw new Error("Server is not configured");
+      }
+      const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+
+      const { data: deck, error: deckErr } = await supabase
+        .from("decks")
+        .select("id,title,is_public,created_at")
+        .eq("id", data.deckId)
+        .eq("is_public", true)
+        .maybeSingle();
+      if (deckErr) throw new Error(deckErr.message);
+      if (!deck) throw new Error("This deck is private or does not exist.");
+
+      const [{ data: slides, error: sErr }, { data: hotspots, error: hErr }] =
+        await Promise.all([
+          supabase
+            .from("deck_slides")
+            .select("id,variant,slide_index,image_url,width,height")
+            .eq("deck_id", data.deckId)
+            .order("variant", { ascending: true })
+            .order("slide_index", { ascending: true }),
+          supabase
+            .from("hotspots")
+            .select("id,variant,slide_index,x,y,w,h,action_type,action_payload,label")
+            .eq("deck_id", data.deckId),
+        ]);
+      if (sErr) throw new Error(sErr.message);
+      if (hErr) throw new Error(hErr.message);
+
+      return {
+        deck: deck as DeckDTO,
+        slides: (slides ?? []) as DeckSlideDTO[],
+        hotspots: ((hotspots ?? []) as unknown as HotspotDTO[]).map((h) => ({
+          ...h,
+          action_payload: (h.action_payload ?? {}) as Record<string, any>,
+        })),
+      };
+    },
+  );
