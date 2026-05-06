@@ -366,7 +366,19 @@ function DeckIndexPage() {
               <Button variant="outline" onClick={cancelReview} disabled={saving}>
                 Cancel
               </Button>
-              <Button onClick={confirmAndSave} disabled={saving || reviewSlides.length === 0}>
+              {qualitySummary.errors > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => void confirmAndSave(true)}
+                  disabled={saving}
+                >
+                  Save anyway
+                </Button>
+              )}
+              <Button
+                onClick={() => void confirmAndSave(false)}
+                disabled={saving || reviewSlides.length === 0 || qualitySummary.errors > 0}
+              >
                 {saving ? "Saving…" : `Save deck (${reviewSlides.length} slides)`}
               </Button>
             </div>
