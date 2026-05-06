@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   getPublicDeck,
   type DeckSlideDTO,
@@ -9,6 +9,13 @@ import {
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { Button } from "@/components/ui/button";
+import {
+  SlideLayout,
+  SlideEyebrow,
+  SlideTitle,
+  SlideBody,
+} from "@/components/slides/SlideLayout";
+import { SlideCard } from "@/components/slides/Card";
 
 export const Route = createFileRoute("/deck/$deckId")({
   head: () => ({ meta: [{ title: "Interactive Deck" }] }),
