@@ -175,6 +175,36 @@ function DeckIndexPage() {
     return { errors, warnings };
   })();
 
+  const duplicateLabels = (() => {
+    const counts = new Map<string, number>();
+    if (!reviewSlides) return counts;
+    for (const s of reviewSlides) {
+      const key = s.label.trim().toLowerCase();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    // Keep only labels appearing more than once.
+    for (const [k, n] of counts) if (n < 2) counts.delete(k);
+    return counts;
+  })();
+  const duplicateCount = duplicateLabels.size;
+
+  const autoRenameDuplicates = () => {
+    setReviewSlides((prev) => {
+      if (!prev) return prev;
+      const seen = new Map<string, number>();
+      return prev.map((s, i) => {
+        const base = s.label.trim() || `Slide ${i + 1}`;
+        const key = base.toLowerCase();
+        const n = (seen.get(key) ?? 0) + 1;
+        seen.set(key, n);
+        // First occurrence keeps its name; later ones get a numeric suffix.
+        return n === 1 ? { ...s, label: base } : { ...s, label: `${base} (${n})` };
+      });
+    });
+    toast.success("Renamed duplicate slide labels");
+  };
+
   const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
     if (qualitySummary.errors > 0 && !force) {
@@ -303,6 +333,17 @@ function DeckIndexPage() {
             </div>
 
             <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
+            {duplicateCount > 0 && (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-2 text-xs text-yellow-700 dark:text-yellow-400">
+                <span className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  {duplicateCount} duplicate label{duplicateCount === 1 ? "" : "s"} detected.
+                </span>
+                <Button size="sm" variant="outline" onClick={autoRenameDuplicates} disabled={saving}>
+                  Auto-rename
+                </Button>
+              </div>
+            )}
 
             <ul className="divide-y rounded-md border">
               {reviewSlides.map((s, idx) => (
@@ -328,6 +369,11 @@ function DeckIndexPage() {
                       disabled={saving}
                     />
                     <SlideQualityBadge report={s.quality} />
+                    {duplicateLabels.has(s.label.trim().toLowerCase()) && (
+                      <p className="flex items-center gap-1 text-[11px] text-yellow-600 dark:text-yellow-400">
+                        <AlertTriangle className="h-3 w-3" /> Duplicate label
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Button
