@@ -144,7 +144,7 @@ export const getDeckBundle = createServerFn({ method: "GET" })
         await Promise.all([
           supabase
             .from("deck_slides")
-            .select("id,variant,slide_index,image_url,width,height")
+            .select("id,variant,slide_index,image_url,width,height,label")
             .eq("deck_id", data.deckId)
             .order("variant", { ascending: true })
             .order("slide_index", { ascending: true }),
@@ -318,7 +318,7 @@ export const getPublicDeck = createServerFn({ method: "GET" })
         await Promise.all([
           supabase
             .from("deck_slides")
-            .select("id,variant,slide_index,image_url,width,height")
+            .select("id,variant,slide_index,image_url,width,height,label")
             .eq("deck_id", data.deckId)
             .order("variant", { ascending: true })
             .order("slide_index", { ascending: true }),
