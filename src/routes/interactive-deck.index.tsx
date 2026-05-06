@@ -34,7 +34,10 @@ type RenderedSlide = {
   width: number;
   height: number;
   label: string;
+  quality: SlideQualityReport;
 };
+
+const TARGET_WIDTH = 1920;
 
 function DeckIndexPage() {
   const { authReady, authError } = useAnonAuth();
