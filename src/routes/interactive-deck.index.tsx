@@ -94,19 +94,29 @@ function DeckIndexPage() {
       }
       const { renderPdfToPngBlobs } = await import("@/lib/pdfToImages");
       const pages = await renderPdfToPngBlobs(file, {
-        targetWidth: 1920,
+        targetWidth: TARGET_WIDTH,
         onProgress: (i, total) => setImportStatus(`Rendering page ${i} / ${total}…`),
       });
       const baseName = file.name.replace(/\.pdf$/i, "");
       if (!pdfTitle.trim()) setPdfTitle(baseName);
-      const rendered: RenderedSlide[] = pages.map((p, i) => ({
-        tempId: crypto.randomUUID(),
-        blob: p.blob,
-        previewUrl: URL.createObjectURL(p.blob),
-        width: p.width,
-        height: p.height,
-        label: `Slide ${i + 1}`,
-      }));
+
+      const rendered: RenderedSlide[] = [];
+      for (let i = 0; i < pages.length; i++) {
+        setImportStatus(`Checking quality ${i + 1} / ${pages.length}…`);
+        const p = pages[i];
+        const quality = await checkSlideQuality(p.blob, p.width, p.height, {
+          targetWidth: TARGET_WIDTH,
+        });
+        rendered.push({
+          tempId: crypto.randomUUID(),
+          blob: p.blob,
+          previewUrl: URL.createObjectURL(p.blob),
+          width: p.width,
+          height: p.height,
+          label: `Slide ${i + 1}`,
+          quality,
+        });
+      }
       setReviewSlides(rendered);
       setImportStatus(null);
     } catch (e) {
