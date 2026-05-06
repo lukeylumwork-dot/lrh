@@ -48,6 +48,7 @@ export type Database = {
           height: number | null
           id: string
           image_url: string
+          label: string | null
           slide_index: number
           variant: string
           width: number | null
@@ -58,6 +59,7 @@ export type Database = {
           height?: number | null
           id?: string
           image_url: string
+          label?: string | null
           slide_index: number
           variant?: string
           width?: number | null
@@ -68,6 +70,7 @@ export type Database = {
           height?: number | null
           id?: string
           image_url?: string
+          label?: string | null
           slide_index?: number
           variant?: string
           width?: number | null

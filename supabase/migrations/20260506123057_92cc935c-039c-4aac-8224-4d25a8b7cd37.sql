@@ -1,0 +1,1 @@
+ALTER TABLE public.deck_slides ADD COLUMN IF NOT EXISTS label text;
