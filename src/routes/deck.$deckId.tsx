@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   getPublicDeck,
+  logDeckAccessEvent,
   type DeckSlideDTO,
   type HotspotDTO,
   type DeckDTO,
