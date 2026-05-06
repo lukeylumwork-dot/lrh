@@ -18,6 +18,7 @@ export interface DeckSlideDTO {
   image_url: string;
   width: number | null;
   height: number | null;
+  label: string | null;
 }
 
 export interface HotspotDTO {
@@ -74,6 +75,7 @@ export const createDeckFromImages = createServerFn({ method: "POST" })
               image_url: z.string().url().max(2048),
               width: z.number().int().min(1).max(20000),
               height: z.number().int().min(1).max(20000),
+              label: z.string().max(200).nullable().optional(),
             }),
           )
           .min(1)
@@ -97,6 +99,7 @@ export const createDeckFromImages = createServerFn({ method: "POST" })
       image_url: s.image_url,
       width: s.width,
       height: s.height,
+      label: s.label ?? null,
     }));
     const { error: sErr } = await supabase.from("deck_slides").insert(rows);
     if (sErr) {
@@ -141,7 +144,7 @@ export const getDeckBundle = createServerFn({ method: "GET" })
         await Promise.all([
           supabase
             .from("deck_slides")
-            .select("id,variant,slide_index,image_url,width,height")
+            .select("id,variant,slide_index,image_url,width,height,label")
             .eq("deck_id", data.deckId)
             .order("variant", { ascending: true })
             .order("slide_index", { ascending: true }),
@@ -204,6 +207,61 @@ export const deleteSlide = createServerFn({ method: "POST" })
       .delete()
       .eq("id", data.slideId);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const renameSlide = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        slideId: z.string().uuid(),
+        label: z.string().max(200).nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("deck_slides")
+      .update({ label: data.label })
+      .eq("id", data.slideId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const reorderSlides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        deckId: z.string().uuid(),
+        variant: z.string().min(1).max(40),
+        orderedSlideIds: z.array(z.string().uuid()).min(1).max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // Two-phase to avoid unique-constraint collisions on (deck_id,variant,slide_index)
+    const offset = 10000;
+    for (let i = 0; i < data.orderedSlideIds.length; i++) {
+      const { error } = await supabase
+        .from("deck_slides")
+        .update({ slide_index: offset + i })
+        .eq("id", data.orderedSlideIds[i])
+        .eq("deck_id", data.deckId)
+        .eq("variant", data.variant);
+      if (error) throw new Error(error.message);
+    }
+    for (let i = 0; i < data.orderedSlideIds.length; i++) {
+      const { error } = await supabase
+        .from("deck_slides")
+        .update({ slide_index: i })
+        .eq("id", data.orderedSlideIds[i])
+        .eq("deck_id", data.deckId)
+        .eq("variant", data.variant);
+      if (error) throw new Error(error.message);
+    }
     return { ok: true };
   });
 
@@ -315,7 +373,7 @@ export const getPublicDeck = createServerFn({ method: "GET" })
         await Promise.all([
           supabase
             .from("deck_slides")
-            .select("id,variant,slide_index,image_url,width,height")
+            .select("id,variant,slide_index,image_url,width,height,label")
             .eq("deck_id", data.deckId)
             .order("variant", { ascending: true })
             .order("slide_index", { ascending: true }),
