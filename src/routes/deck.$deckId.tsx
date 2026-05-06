@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   getPublicDeck,
   type DeckSlideDTO,
@@ -9,6 +9,13 @@ import {
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { Button } from "@/components/ui/button";
+import {
+  SlideLayout,
+  SlideEyebrow,
+  SlideTitle,
+  SlideBody,
+} from "@/components/slides/SlideLayout";
+import { SlideCard } from "@/components/slides/Card";
 
 export const Route = createFileRoute("/deck/$deckId")({
   head: () => ({ meta: [{ title: "Interactive Deck" }] }),
@@ -47,8 +54,9 @@ function PublicDeckPage() {
     if (isPrivate) {
       return (
         <ErrorScreen
-          emoji="🔒"
-          title="This deck is private"
+          eyebrow="Access restricted"
+          title="This deck is"
+          highlight="private"
           message="The owner hasn't made this deck publicly viewable. If you believe you should have access, please ask them to share a public link."
         />
       );
@@ -56,16 +64,18 @@ function PublicDeckPage() {
     if (isMissing) {
       return (
         <ErrorScreen
-          emoji="🔍"
-          title="Deck not found"
+          eyebrow="404"
+          title="Deck"
+          highlight="not found"
           message="We couldn't find a deck with this link. Double-check the URL or ask the sender for an updated link."
         />
       );
     }
     return (
       <ErrorScreen
-        emoji="⚠️"
-        title="Something went wrong"
+        eyebrow="Error"
+        title="Something went"
+        highlight="wrong"
         message={error}
       />
     );
@@ -75,8 +85,9 @@ function PublicDeckPage() {
   if (bundle.slides.length === 0) {
     return (
       <ErrorScreen
-        emoji="🖼️"
-        title={bundle.deck.title}
+        eyebrow={bundle.deck.title}
+        title="No slides"
+        highlight="uploaded yet"
         message="This deck doesn't have any slides yet. Please check back soon."
       />
     );
@@ -125,23 +136,47 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 function ErrorScreen({
-  emoji,
+  eyebrow,
   title,
+  highlight,
   message,
+  action,
 }: {
-  emoji: string;
+  eyebrow: string;
   title: string;
-  message: string;
+  highlight?: string;
+  message: ReactNode;
+  action?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <div className="max-w-md space-y-4 text-center">
-        <div className="text-5xl" aria-hidden>
-          {emoji}
+    <div
+      className="relative min-h-screen w-full overflow-hidden"
+      style={{ aspectRatio: "auto" }}
+    >
+      <SlideLayout>
+        <div className="grid h-full grid-cols-12 gap-[var(--lrh-space-5)] items-center">
+          <div className="col-span-12 md:col-span-7 md:col-start-2">
+            <SlideEyebrow>{eyebrow}</SlideEyebrow>
+            <SlideTitle highlight={highlight} highlightPosition="after">
+              {title}
+            </SlideTitle>
+            <SlideBody muted className="mt-[var(--lrh-space-4)]">
+              {message}
+            </SlideBody>
+            {action && <div className="mt-[var(--lrh-space-5)]">{action}</div>}
+          </div>
+          <div className="hidden md:col-span-3 md:block">
+            <SlideCard variant="soft" className="h-full">
+              <p className="text-xs uppercase tracking-[0.16em] text-[var(--lrh-navy-500)]">
+                London Reporting House
+              </p>
+              <p className="mt-2 text-sm text-[var(--lrh-navy-700)]">
+                Private &amp; Confidential
+              </p>
+            </SlideCard>
+          </div>
         </div>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
-        <p className="text-sm text-muted-foreground">{message}</p>
-      </div>
+      </SlideLayout>
     </div>
   );
 }
