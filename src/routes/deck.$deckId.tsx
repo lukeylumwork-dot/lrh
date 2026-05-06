@@ -59,6 +59,7 @@ function PublicDeckPage() {
           title="This deck is"
           highlight="private"
           message="The owner hasn't made this deck publicly viewable. If you believe you should have access, please ask them to share a public link."
+          deckId={deckId}
         />
       );
     }
@@ -69,6 +70,7 @@ function PublicDeckPage() {
           title="Deck"
           highlight="not found"
           message="We couldn't find a deck with this link. Double-check the URL or ask the sender for an updated link."
+          deckId={deckId}
         />
       );
     }
@@ -78,6 +80,7 @@ function PublicDeckPage() {
         title="Something went"
         highlight="wrong"
         message={error}
+        deckId={deckId}
       />
     );
   }
@@ -90,6 +93,8 @@ function PublicDeckPage() {
         title="No slides"
         highlight="uploaded yet"
         message="This deck doesn't have any slides yet. Please check back soon."
+        deckTitle={bundle.deck.title}
+        deckId={deckId}
       />
     );
   }
@@ -166,12 +171,16 @@ function ErrorScreen({
   highlight,
   message,
   action,
+  deckTitle,
+  deckId,
 }: {
   eyebrow: string;
   title: string;
   highlight?: string;
   message: ReactNode;
   action?: ReactNode;
+  deckTitle?: string;
+  deckId?: string;
 }) {
   return (
     <div
@@ -198,6 +207,30 @@ function ErrorScreen({
               <p className="mt-2 text-sm text-[var(--lrh-navy-700)]">
                 Private &amp; Confidential
               </p>
+              {(deckTitle || deckId) && (
+                <div className="mt-[var(--lrh-space-4)] border-t border-[var(--lrh-surface-300)] pt-[var(--lrh-space-3)] space-y-2">
+                  {deckTitle && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--lrh-navy-500)]">
+                        Deck
+                      </p>
+                      <p className="text-sm text-[var(--lrh-navy-700)] break-words">
+                        {deckTitle}
+                      </p>
+                    </div>
+                  )}
+                  {deckId && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--lrh-navy-500)]">
+                        Deck ID
+                      </p>
+                      <p className="font-mono text-xs text-[var(--lrh-navy-700)] break-all">
+                        {deckId}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </SlideCard>
           </div>
         </div>
