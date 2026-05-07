@@ -9,6 +9,12 @@ import {
 } from "@/server/interactiveDeck.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
