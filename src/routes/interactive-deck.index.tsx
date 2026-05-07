@@ -355,10 +355,11 @@ function DeckIndexPage() {
                 </div>
               </div>
             )}
-            {showDuplicatesOnly && duplicateCount === 0 && setShowDuplicatesOnly(false)}
 
             <ul className="divide-y rounded-md border">
-              {reviewSlides.map((s, idx) => (
+              {reviewSlides.map((s, idx) => {
+                if (showDuplicatesOnly && !duplicateLabels.has(s.label.trim().toLowerCase())) return null;
+                return (
                 <li key={s.tempId} className="flex items-center gap-3 p-2">
                   <span className="w-8 shrink-0 text-center text-xs text-muted-foreground">
                     {idx + 1}
