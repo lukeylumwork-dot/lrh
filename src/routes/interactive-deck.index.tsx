@@ -190,7 +190,12 @@ function DeckIndexPage() {
   })();
   const duplicateCount = duplicateLabels.size;
 
-  const autoRenameDuplicates = () => {
+  type RenameStrategy = "counter" | "slideNumber" | "timestamp";
+  const autoRenameDuplicates = (strategy: RenameStrategy = "counter") => {
+    const stamp = new Date()
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d+Z$/, "Z");
     setReviewSlides((prev) => {
       if (!prev) return prev;
       const seen = new Map<string, number>();
@@ -199,12 +204,17 @@ function DeckIndexPage() {
         const key = base.toLowerCase();
         const n = (seen.get(key) ?? 0) + 1;
         seen.set(key, n);
-        // First occurrence keeps its name; later ones get a numeric suffix.
-        return n === 1 ? { ...s, label: base } : { ...s, label: `${base} (${n})` };
+        if (n === 1) return { ...s, label: base };
+        let suffix: string;
+        if (strategy === "slideNumber") suffix = `#${i + 1}`;
+        else if (strategy === "timestamp") suffix = stamp;
+        else suffix = `(${n})`;
+        return { ...s, label: `${base} ${suffix}` };
       });
     });
     toast.success("Renamed duplicate slide labels");
   };
+
 
   const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
