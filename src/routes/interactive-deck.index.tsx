@@ -359,9 +359,24 @@ function DeckIndexPage() {
                   >
                     {showDuplicatesOnly ? "Show all" : "Show duplicates only"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={autoRenameDuplicates} disabled={saving}>
-                    Auto-rename
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" disabled={saving}>
+                        Auto-rename ▾
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("counter")}>
+                        Numeric suffix — "(2)", "(3)"
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("slideNumber")}>
+                        Slide number — "#7"
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("timestamp")}>
+                        Date/time stamp
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )}
