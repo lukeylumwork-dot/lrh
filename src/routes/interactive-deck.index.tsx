@@ -418,7 +418,8 @@ function DeckIndexPage() {
                     </Button>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
 
             <div className="flex justify-end gap-2">
