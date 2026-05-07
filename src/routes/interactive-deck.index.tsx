@@ -55,6 +55,7 @@ function DeckIndexPage() {
   const [importError, setImportError] = useState<string | null>(null);
   const [reviewSlides, setReviewSlides] = useState<RenderedSlide[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
 
   useEffect(() => {
     if (!authReady) return;
