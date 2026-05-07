@@ -335,16 +335,27 @@ function DeckIndexPage() {
 
             <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
             {duplicateCount > 0 && (
-              <div className="flex items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-2 text-xs text-yellow-700 dark:text-yellow-400">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-2 text-xs text-yellow-700 dark:text-yellow-400">
                 <span className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
                   {duplicateCount} duplicate label{duplicateCount === 1 ? "" : "s"} detected.
                 </span>
-                <Button size="sm" variant="outline" onClick={autoRenameDuplicates} disabled={saving}>
-                  Auto-rename
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowDuplicatesOnly((v) => !v)}
+                    disabled={saving}
+                  >
+                    {showDuplicatesOnly ? "Show all" : "Show duplicates only"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={autoRenameDuplicates} disabled={saving}>
+                    Auto-rename
+                  </Button>
+                </div>
               </div>
             )}
+            {showDuplicatesOnly && duplicateCount === 0 && setShowDuplicatesOnly(false)}
 
             <ul className="divide-y rounded-md border">
               {reviewSlides.map((s, idx) => (
