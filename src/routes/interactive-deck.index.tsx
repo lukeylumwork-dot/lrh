@@ -9,6 +9,12 @@ import {
 } from "@/server/interactiveDeck.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -190,7 +196,12 @@ function DeckIndexPage() {
   })();
   const duplicateCount = duplicateLabels.size;
 
-  const autoRenameDuplicates = () => {
+  type RenameStrategy = "counter" | "slideNumber" | "timestamp";
+  const autoRenameDuplicates = (strategy: RenameStrategy = "counter") => {
+    const stamp = new Date()
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d+Z$/, "Z");
     setReviewSlides((prev) => {
       if (!prev) return prev;
       const seen = new Map<string, number>();
@@ -199,12 +210,17 @@ function DeckIndexPage() {
         const key = base.toLowerCase();
         const n = (seen.get(key) ?? 0) + 1;
         seen.set(key, n);
-        // First occurrence keeps its name; later ones get a numeric suffix.
-        return n === 1 ? { ...s, label: base } : { ...s, label: `${base} (${n})` };
+        if (n === 1) return { ...s, label: base };
+        let suffix: string;
+        if (strategy === "slideNumber") suffix = `#${i + 1}`;
+        else if (strategy === "timestamp") suffix = stamp;
+        else suffix = `(${n})`;
+        return { ...s, label: `${base} ${suffix}` };
       });
     });
     toast.success("Renamed duplicate slide labels");
   };
+
 
   const confirmAndSave = async (force = false) => {
     if (!reviewSlides || reviewSlides.length === 0) return;
@@ -349,9 +365,24 @@ function DeckIndexPage() {
                   >
                     {showDuplicatesOnly ? "Show all" : "Show duplicates only"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={autoRenameDuplicates} disabled={saving}>
-                    Auto-rename
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline" disabled={saving}>
+                        Auto-rename ▾
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("counter")}>
+                        Numeric suffix — "(2)", "(3)"
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("slideNumber")}>
+                        Slide number — "#7"
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => autoRenameDuplicates("timestamp")}>
+                        Date/time stamp
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )}
