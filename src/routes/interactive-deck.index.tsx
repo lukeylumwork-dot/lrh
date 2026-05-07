@@ -167,6 +167,15 @@ function DeckIndexPage() {
       if (!prev) return prev;
       const next = prev.slice();
       next[idx] = { ...next[idx], label };
+      const key = label.trim().toLowerCase();
+      if (key) {
+        const collision = next.some((s, i) => i !== idx && s.label.trim().toLowerCase() === key);
+        if (collision) {
+          toast.warning(`"${label.trim()}" is already used by another slide.`, {
+            id: `dup-${idx}`,
+          });
+        }
+      }
       return next;
     });
   };
