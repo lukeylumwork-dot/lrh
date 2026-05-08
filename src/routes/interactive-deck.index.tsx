@@ -359,22 +359,6 @@ function DeckIndexPage() {
             </div>
 
             <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
-            {duplicateCount === 0 && showDuplicatesOnly && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  No duplicate labels remain. The list is filtered — switch back to see every slide.
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowDuplicatesOnly(false)}
-                  disabled={saving}
-                >
-                  Show all slides
-                </Button>
-              </div>
-            )}
             {duplicateCount > 0 && (
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-2 text-xs text-yellow-700 dark:text-yellow-400">
                 <span className="flex items-center gap-2">
@@ -412,71 +396,91 @@ function DeckIndexPage() {
               </div>
             )}
 
-            <ul className="divide-y rounded-md border">
-              {reviewSlides.map((s, idx) => {
-                if (showDuplicatesOnly && !duplicateLabels.has(s.label.trim().toLowerCase())) return null;
-                return (
-                <li key={s.tempId} className="flex items-center gap-3 p-2">
-                  <span className="w-8 shrink-0 text-center text-xs text-muted-foreground">
-                    {idx + 1}
-                  </span>
-                  <div
-                    className="shrink-0 overflow-hidden rounded border bg-muted"
-                    style={{ width: 96, aspectRatio: "16 / 9" }}
-                  >
-                    <img
-                      src={s.previewUrl}
-                      alt={`Slide ${idx + 1} preview`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-1">
-                    <Input
-                      value={s.label}
-                      onChange={(e) => renameSlide(idx, e.target.value)}
-                      placeholder={`Slide ${idx + 1}`}
-                      disabled={saving}
-                    />
-                    <SlideQualityBadge report={s.quality} />
-                    {duplicateLabels.has(s.label.trim().toLowerCase()) && (
-                      <p className="flex items-center gap-1 text-[11px] text-yellow-600 dark:text-yellow-400">
-                        <AlertTriangle className="h-3 w-3" /> Duplicate label
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => moveSlide(idx, -1)}
-                      disabled={saving || idx === 0}
-                      aria-label="Move up"
+            {showDuplicatesOnly && duplicateCount === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-md border border-dashed p-8 text-center">
+                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                <div>
+                  <p className="text-sm font-medium">No duplicate labels</p>
+                  <p className="text-xs text-muted-foreground">
+                    Every slide has a unique name. The list is filtered to duplicates only.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowDuplicatesOnly(false)}
+                  disabled={saving}
+                >
+                  Show all slides
+                </Button>
+              </div>
+            ) : (
+              <ul className="divide-y rounded-md border">
+                {reviewSlides.map((s, idx) => {
+                  if (showDuplicatesOnly && !duplicateLabels.has(s.label.trim().toLowerCase())) return null;
+                  return (
+                  <li key={s.tempId} className="flex items-center gap-3 p-2">
+                    <span className="w-8 shrink-0 text-center text-xs text-muted-foreground">
+                      {idx + 1}
+                    </span>
+                    <div
+                      className="shrink-0 overflow-hidden rounded border bg-muted"
+                      style={{ width: 96, aspectRatio: "16 / 9" }}
                     >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => moveSlide(idx, 1)}
-                      disabled={saving || idx === reviewSlides.length - 1}
-                      aria-label="Move down"
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeSlide(idx)}
-                      disabled={saving}
-                      aria-label="Remove slide"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </li>
-                );
-              })}
-            </ul>
+                      <img
+                        src={s.previewUrl}
+                        alt={`Slide ${idx + 1} preview`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col gap-1">
+                      <Input
+                        value={s.label}
+                        onChange={(e) => renameSlide(idx, e.target.value)}
+                        placeholder={`Slide ${idx + 1}`}
+                        disabled={saving}
+                      />
+                      <SlideQualityBadge report={s.quality} />
+                      {duplicateLabels.has(s.label.trim().toLowerCase()) && (
+                        <p className="flex items-center gap-1 text-[11px] text-yellow-600 dark:text-yellow-400">
+                          <AlertTriangle className="h-3 w-3" /> Duplicate label
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => moveSlide(idx, -1)}
+                        disabled={saving || idx === 0}
+                        aria-label="Move up"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => moveSlide(idx, 1)}
+                        disabled={saving || idx === reviewSlides.length - 1}
+                        aria-label="Move down"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeSlide(idx)}
+                        disabled={saving}
+                        aria-label="Remove slide"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </li>
+                  );
+                })}
+              </ul>
+            )}
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={cancelReview} disabled={saving}>
