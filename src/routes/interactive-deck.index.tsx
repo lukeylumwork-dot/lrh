@@ -359,22 +359,6 @@ function DeckIndexPage() {
             </div>
 
             <QualityBanner errors={qualitySummary.errors} warnings={qualitySummary.warnings} />
-            {duplicateCount === 0 && showDuplicatesOnly && (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  No duplicate labels remain. The list is filtered — switch back to see every slide.
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowDuplicatesOnly(false)}
-                  disabled={saving}
-                >
-                  Show all slides
-                </Button>
-              </div>
-            )}
             {duplicateCount > 0 && (
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-2 text-xs text-yellow-700 dark:text-yellow-400">
                 <span className="flex items-center gap-2">
