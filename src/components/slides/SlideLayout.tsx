@@ -2,6 +2,7 @@ import { ReactNode, Children, isValidElement } from "react";
 import { cn } from "@/lib/utils";
 import { textStyles } from "./brand";
 import { Highlighted } from "./Highlighted";
+import { assets } from "./assets";
 
 /** Apply <Highlighted> to plain string children; pass through anything else. */
 function highlightChildren(children: ReactNode): ReactNode {
