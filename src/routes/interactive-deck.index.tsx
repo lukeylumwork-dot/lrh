@@ -408,7 +408,11 @@ function DeckIndexPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowDuplicatesOnly(false)}
+                  onClick={() => {
+                    const y = window.scrollY;
+                    setShowDuplicatesOnly(false);
+                    requestAnimationFrame(() => window.scrollTo({ top: y }));
+                  }}
                   disabled={saving}
                 >
                   Show all slides
