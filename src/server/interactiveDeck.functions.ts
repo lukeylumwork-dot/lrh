@@ -181,21 +181,25 @@ const slideRowSchema = z.object({
 export const upsertSlide = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => slideRowSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
     const { supabase } = context;
-    const { error } = await supabase.from("deck_slides").upsert(
-      {
-        deck_id: data.deckId,
-        variant: data.variant,
-        slide_index: data.slideIndex,
-        image_url: data.imageUrl,
-        width: data.width ?? null,
-        height: data.height ?? null,
-      },
-      { onConflict: "deck_id,variant,slide_index" },
-    );
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    const { data: row, error } = await supabase
+      .from("deck_slides")
+      .upsert(
+        {
+          deck_id: data.deckId,
+          variant: data.variant,
+          slide_index: data.slideIndex,
+          image_url: data.imageUrl,
+          width: data.width ?? null,
+          height: data.height ?? null,
+        },
+        { onConflict: "deck_id,variant,slide_index" },
+      )
+      .select("id")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Failed to upsert slide");
+    return { id: row.id };
   });
 
 export const deleteSlide = createServerFn({ method: "POST" })
