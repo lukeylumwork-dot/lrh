@@ -113,7 +113,10 @@ export function SlideFooter({ page, total = 19, className }: SlideFooterProps) {
         className,
       )}
     >
-      <span>© London Reporting House 2026 · Private &amp; Confidential</span>
+      <span className="flex items-center gap-2.5">
+        <img src={assets.brand.lettermarkTransparent} alt="LRH" className="h-5 w-5 object-contain" />
+        <span>© London Reporting House 2026 · Private &amp; Confidential</span>
+      </span>
       <span>{page} / {total}</span>
     </div>
   );
