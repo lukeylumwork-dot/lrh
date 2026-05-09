@@ -308,6 +308,7 @@ export const renumberDeckLabels = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const pad2 = (n: number) => String(n).padStart(2, "0");
     const { supabase } = context;
     const { data: rows, error } = await supabase
       .from("deck_slides")
