@@ -2,6 +2,7 @@ import { ReactNode, Children, isValidElement } from "react";
 import { cn } from "@/lib/utils";
 import { textStyles } from "./brand";
 import { Highlighted } from "./Highlighted";
+import { assets } from "./assets";
 
 /** Apply <Highlighted> to plain string children; pass through anything else. */
 function highlightChildren(children: ReactNode): ReactNode {
@@ -112,7 +113,10 @@ export function SlideFooter({ page, total = 19, className }: SlideFooterProps) {
         className,
       )}
     >
-      <span>© London Reporting House 2026 · Private &amp; Confidential</span>
+      <span className="flex items-center gap-2.5">
+        <img src={assets.brand.lettermarkTransparent} alt="LRH" className="h-5 w-5 object-contain" />
+        <span>© London Reporting House 2026 · Private &amp; Confidential</span>
+      </span>
       <span>{page} / {total}</span>
     </div>
   );

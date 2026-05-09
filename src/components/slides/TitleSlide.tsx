@@ -33,15 +33,11 @@ export function TitleSlide() {
     ),
     hero: (
       <div className="h-full w-full flex items-center justify-center">
-        <div className="relative h-full w-full max-h-[26rem] max-w-[26rem] aspect-square rounded-full border-[10px] border-[var(--lrh-navy-900)] overflow-hidden shadow-xl">
-          <div className="absolute inset-2 rounded-full border-[6px] border-[var(--lrh-blue-500)] overflow-hidden">
-            <img
-              src={assets.titleGraphic}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
-        </div>
+        <img
+          src={assets.brand.primary}
+          alt="London Reporting House"
+          className="max-h-[28rem] max-w-full object-contain"
+        />
       </div>
     ),
     footer: <SlideFooter page={1} />,
