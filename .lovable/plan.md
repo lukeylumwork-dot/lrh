@@ -1,72 +1,72 @@
-# PDF-to-Slide Import Workflow
+## Slide-master architecture
 
-## Goal
-Drop a multi-page PDF (e.g. the 38-page LRH deck) into the admin UI and get a fully-populated deck — one PNG per page, in order, ready to add hotspots and share.
+Treat uploaded PNGs as locked visual masters. The platform only adds interactive layers on top, and brand assets stay in platform chrome — never injected into slide bodies.
 
-## Approach: client-side rendering
+### 1. Strip injected logos from React-coded slides
 
-PDF rasterization runs in the **browser**, not the server. Reasons:
-- Cloudflare Workers can't run `sharp`, `canvas`, `pdfium`, or `poppler` (native binaries / Node-only).
-- Browsers ship a working `<canvas>` and `pdfjs-dist` renders pages to it cleanly.
-- Uploads go straight to Supabase Storage (the existing `interactive-deck-slides` bucket), so the server only does small metadata writes.
+These changes keep the React deck working but remove logos that were stamped into slide bodies (per the new rule):
 
-Flow:
+- `src/components/slides/SlideLayout.tsx` — remove the `<img src={assets.brand.lettermarkTransparent} />` from `SlideFooter`. Footer keeps the copyright text and page counter only.
+- `src/components/slides/TitleSlide.tsx` — remove the LRH primary-logo `<img>` from the `hero` region. Replace with a neutral typographic mark or leave the region empty (text headline already conveys the brand).
+- `src/components/slides/assets.ts` — keep entries; they remain in use for platform chrome.
+
+No other React slide files are touched.
+
+### 2. Reserve brand assets for platform chrome only
+
+Allowed usages of `assets.brand.*` going forward:
+- toolbar / header in `interactive-deck.admin.$deckId.tsx` and `/interactive-deck/$deckId`
+- loading screens and the admin dashboard (`interactive-deck.index.tsx`)
+- modal headers (`HotspotModal.tsx`)
+- hotspot indicators / favicon
+- nothing inside any rendered slide body
+
+Add a small `<BrandHeader />` component used by the admin and viewer routes so the LRH lettermark lives in app chrome, not in slides.
+
+### 3. Upload pipeline: preserve order, auto-name, allow rename
+
+Update `handleUpload` in `src/routes/interactive-deck.admin.$deckId.tsx`:
+
+1. **Preserve order** — sort `files` by filename ascending before iterating (current code already iterates in `FileList` order; we make it explicit and stable). Continue numbering from `startIndex` so batch 2 of 10 picks up where batch 1 ended.
+2. **Per-file pipeline** for each PNG:
+   - Upload to storage (existing code).
+   - Insert deck slide (existing code).
+   - Call a new server fn `extractSlideTitle({ slideId, imageUrl })` that runs Lovable AI vision (`google/gemini-3-flash-preview`) with a tight prompt: *"Read only the largest headline text on this slide. Reply with the cleaned title in Title Case, max 6 words, no punctuation. If no headline, reply 'Untitled'."* Then format as `${pad2(slide_index+1)} ${title}` and `renameSlide` it.
+   - Show a per-slide status row in the upload toast / progress strip ("3 / 10 — naming…").
+3. **Manual rename later** — already supported (`renameSlide` server fn). Surface the slide labels in `SlidesList` thumbnails (currently it only shows the index) with an inline-editable `<Input>` underneath each thumbnail, debounced to call `renameSlide`.
+4. **Numbering invariants** — keep `slide_index` as the single source of truth for order. Reorder still works via existing `reorderSlides`. The 2-digit prefix in the label is auto-regenerated when the user calls a new "Renumber labels" action (button in admin toolbar).
+
+### 4. Server function additions
+
+In `src/server/interactiveDeck.functions.ts`:
 
 ```text
-Admin picks PDF
-  ↓ pdfjs-dist (browser)
-Render page N → canvas → PNG blob (1920×1080 target, scaled to PDF aspect)
-  ↓ supabase.storage.upload (signed via user session)
-Public URL for each slide
-  ↓ createServerFn: createDeckFromImages({ title, images: [{url, w, h}] })
-INSERT decks row + INSERT deck_slides rows (variant="Light", slide_index=N)
-  ↓
-Redirect to /interactive-deck/admin/<deckId>
+extractSlideTitle({ slideId, imageUrl })
+  - calls Lovable AI Gateway with vision input
+  - on success, updates deck_slides.label to "NN Title"
+  - returns { label }
 ```
 
-## Changes
+Plus a small `renumberDeckLabels({ deckId, variant })` helper that walks slides in `slide_index` order and rewrites the `NN ` prefix on each label, preserving the user-edited title portion.
 
-### 1. New dependency
-- `bun add pdfjs-dist` — pure-JS PDF renderer; works in browser.
-- Configure the worker via `?url` import (Vite-friendly): `import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url"`.
+No DB migration needed — `deck_slides.label` already exists.
 
-### 2. New util: `src/lib/pdfToImages.ts` (browser-only)
-- `renderPdfToPngBlobs(file: File, opts: { targetWidth?: number; onProgress?: (i, total) => void }): Promise<Blob[]>`
-- Loads PDF, iterates pages, renders each to an offscreen canvas at `targetWidth` (default 1920), scaled by page aspect, exports `canvas.toBlob("image/png")`.
-- Reports progress so the UI can show "Rendering page 7 / 38".
+### 5. Quality / responsiveness
 
-### 3. New server function in `src/server/interactiveDeck.functions.ts`
-- `createDeckFromImages` (POST, auth-gated):
-  - Input: `{ title: string, slides: Array<{ image_url: string, width: number, height: number }> }` (Zod, max 200 slides, title 1–200 chars).
-  - Inserts a `decks` row owned by `userId`.
-  - Bulk-inserts `deck_slides` with `variant="Light"`, `slide_index = i`.
-  - Returns `{ deckId }`.
-- Existing per-slide upload uses the user's authenticated browser client + the `interactive-deck-slides` bucket (already public, RLS already allows owner writes).
+- Keep the existing 1920×1080 quality check on uploads (`src/lib/slideQualityCheck.ts`); flag anything off-spec but don't auto-resize.
+- `DeckViewer` continues to render slides at native aspect ratio with hotspots in % coordinates — no changes to interaction stability.
+- AI title extraction failures (rate limit / 402 / network) fall back to `${pad2(idx)} Slide` so the upload never blocks.
 
-### 4. New UI: PDF import card on `/interactive-deck` (the admin index)
-- Card titled **"Import from PDF"** with:
-  - Title input (defaults to PDF filename without extension).
-  - File picker accepting `application/pdf`.
-  - Progress bar: "Rendering 7 / 38" → "Uploading 12 / 38" → "Saving deck…".
-  - On completion: navigate to `/interactive-deck/admin/<deckId>`.
-- All work runs client-side; on failure, show a toast and keep the PDF picker primed for retry.
+### 6. What stays untouched
 
-### 5. Storage path convention
-- `interactive-deck-slides/<userId>/<deckId>/<variant>/slide-<NN>.png` — but since we mint `deckId` only after slides exist, upload first to `…/<userId>/imports/<uuid>/slide-<NN>.png` and pass those URLs to `createDeckFromImages`. (Cleaner alternative: create the deck row first with title, then upload + insert slides — happy to switch if preferred.)
+- `deck_slides`, `hotspots`, `decks` schemas
+- `DeckViewer`, `Hotspot`, `HotspotModal` interaction model
+- Public `/deck/$deckId` viewer
+- The PDF-import review flow on `interactive-deck.index.tsx` (it already treats pages as masters)
 
-## Limits & guardrails
-- Browser memory: 38 pages at 1920px is fine; we render serially (one canvas at a time) so peak memory stays low.
-- Hard cap at 200 pages with a friendly error.
-- File size: enforce ≤100 MB PDF in the picker (browser-side check).
-- If a page fails to render, abort with a clear error pointing to the page number.
+### Technical notes
 
-## Out of scope (for this task)
-- Auto-detecting hotspots from PDF link annotations. (Easy follow-up: `pdfjs-dist` exposes link annotations per page — we could pre-create `open_url` hotspots from them.)
-- Dark variant generation.
-- Server-side rendering fallback (would require swapping runtime; not worth it).
-
-## Files touched
-- `package.json` (new dep)
-- `src/lib/pdfToImages.ts` (new)
-- `src/server/interactiveDeck.functions.ts` (add `createDeckFromImages`)
-- `src/routes/interactive-deck.index.tsx` (add import card)
+- Vision call uses `LOVABLE_API_KEY` server-side; image is passed as a public URL (slides are in a public bucket).
+- Title extraction runs sequentially per slide with a 250 ms delay to stay under the gateway rate limit on a 10-file batch.
+- The `02 Title` formatting uses `String(i+1).padStart(2,'0')`.
+- All chrome-vs-slide logo usage is enforced by removing logo imports from the slide files in step 1; future slides have no path to inject them.

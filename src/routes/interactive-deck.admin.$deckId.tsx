@@ -7,6 +7,9 @@ import {
   setDeckPublic,
   upsertSlide,
   deleteSlide,
+  renameSlide,
+  extractSlideTitle,
+  renumberDeckLabels,
   upsertHotspot,
   deleteHotspot,
   type DeckSlideDTO,
@@ -92,8 +95,12 @@ function AdminPage() {
         variantSlides.length > 0
           ? Math.max(...variantSlides.map((s) => s.slide_index)) + 1
           : 0;
+      // Preserve order by sorting filenames ascending (browsers don't guarantee order).
+      const sorted = Array.from(files).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
+      );
       let idx = startIndex;
-      for (const file of Array.from(files)) {
+      for (const file of sorted) {
         if (file.size > MAX_BYTES) {
           toast.error(`${file.name} is over 10MB`);
           continue;
@@ -114,7 +121,7 @@ function AdminPage() {
         const { data: pub } = supabase.storage
           .from("interactive-deck-slides")
           .getPublicUrl(path);
-        await upsertSlide({
+        const { id: slideId } = await upsertSlide({
           data: {
             deckId,
             variant,
@@ -122,7 +129,17 @@ function AdminPage() {
             imageUrl: pub.publicUrl,
           },
         });
+        // Auto-name via vision; failure is non-fatal (fallback label set server-side).
+        try {
+          await extractSlideTitle({
+            data: { slideId, imageUrl: pub.publicUrl, slideIndex: idx },
+          });
+        } catch (e) {
+          console.error("title extract failed", e);
+        }
         idx++;
+        // Light pacing to stay under the gateway rate limit on a 10-file batch.
+        await new Promise((r) => setTimeout(r, 250));
       }
       await reload();
       toast.success("Slides uploaded");
@@ -275,6 +292,20 @@ function AdminPage() {
             >
               {placing ? "Click slide to place…" : "Add hotspot"}
             </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await renumberDeckLabels({ data: { deckId, variant } });
+                  await reload();
+                  toast.success("Slide labels renumbered");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : String(e));
+                }
+              }}
+            >
+              Renumber labels
+            </Button>
           </div>
 
           <DeckViewer
@@ -291,6 +322,10 @@ function AdminPage() {
             slides={variantSlides}
             onDelete={async (id) => {
               await deleteSlide({ data: { slideId: id } });
+              await reload();
+            }}
+            onRename={async (id, label) => {
+              await renameSlide({ data: { slideId: id, label } });
               await reload();
             }}
           />
@@ -323,36 +358,69 @@ function AdminPage() {
 function SlidesList({
   slides,
   onDelete,
+  onRename,
 }: {
   slides: DeckSlideDTO[];
   onDelete: (id: string) => Promise<void>;
+  onRename: (id: string, label: string) => Promise<void>;
 }) {
   if (slides.length === 0) return null;
   return (
-    <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {slides.map((s) => (
-        <div
-          key={s.id}
-          className="relative overflow-hidden rounded border bg-muted"
-          style={{ aspectRatio: "16 / 9" }}
-        >
-          <img
-            src={s.image_url}
-            alt={`Slide ${s.slide_index + 1}`}
-            className="h-full w-full object-cover"
-          />
-          <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] text-white">
-            {s.slide_index + 1}
-          </span>
-          <button
-            onClick={() => onDelete(s.id)}
-            className="absolute right-1 top-1 rounded bg-black/60 p-1 text-white hover:bg-destructive"
-            aria-label="Delete slide"
-          >
-            <Trash2 className="h-3 w-3" />
-          </button>
-        </div>
+        <SlideCard key={s.id} slide={s} onDelete={onDelete} onRename={onRename} />
       ))}
+    </div>
+  );
+}
+
+function SlideCard({
+  slide,
+  onDelete,
+  onRename,
+}: {
+  slide: DeckSlideDTO;
+  onDelete: (id: string) => Promise<void>;
+  onRename: (id: string, label: string) => Promise<void>;
+}) {
+  const [label, setLabel] = useState(slide.label ?? "");
+  useEffect(() => {
+    setLabel(slide.label ?? "");
+  }, [slide.label]);
+  return (
+    <div className="space-y-1">
+      <div
+        className="relative overflow-hidden rounded border bg-muted"
+        style={{ aspectRatio: "16 / 9" }}
+      >
+        <img
+          src={slide.image_url}
+          alt={slide.label ?? `Slide ${slide.slide_index + 1}`}
+          className="h-full w-full object-cover"
+        />
+        <span className="absolute left-1 top-1 rounded bg-black/60 px-1 text-[10px] text-white">
+          {slide.slide_index + 1}
+        </span>
+        <button
+          onClick={() => onDelete(slide.id)}
+          className="absolute right-1 top-1 rounded bg-black/60 p-1 text-white hover:bg-destructive"
+          aria-label="Delete slide"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+      <Input
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={() => {
+          if ((slide.label ?? "") !== label) void onRename(slide.id, label);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+        placeholder={`Slide ${slide.slide_index + 1}`}
+        className="h-7 text-xs"
+      />
     </div>
   );
 }

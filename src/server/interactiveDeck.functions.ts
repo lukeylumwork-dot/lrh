@@ -181,21 +181,25 @@ const slideRowSchema = z.object({
 export const upsertSlide = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => slideRowSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
     const { supabase } = context;
-    const { error } = await supabase.from("deck_slides").upsert(
-      {
-        deck_id: data.deckId,
-        variant: data.variant,
-        slide_index: data.slideIndex,
-        image_url: data.imageUrl,
-        width: data.width ?? null,
-        height: data.height ?? null,
-      },
-      { onConflict: "deck_id,variant,slide_index" },
-    );
-    if (error) throw new Error(error.message);
-    return { ok: true };
+    const { data: row, error } = await supabase
+      .from("deck_slides")
+      .upsert(
+        {
+          deck_id: data.deckId,
+          variant: data.variant,
+          slide_index: data.slideIndex,
+          image_url: data.imageUrl,
+          width: data.width ?? null,
+          height: data.height ?? null,
+        },
+        { onConflict: "deck_id,variant,slide_index" },
+      )
+      .select("id")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Failed to upsert slide");
+    return { id: row.id };
   });
 
 export const deleteSlide = createServerFn({ method: "POST" })
@@ -226,6 +230,106 @@ export const renameSlide = createServerFn({ method: "POST" })
       .update({ label: data.label })
       .eq("id", data.slideId);
     if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const extractSlideTitle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        slideId: z.string().uuid(),
+        imageUrl: z.string().url(),
+        slideIndex: z.number().int().min(0).max(500),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }): Promise<{ label: string }> => {
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const cleanTitle = (raw: string): string =>
+      raw
+        .replace(/["'`]/g, "")
+        .replace(/[.!?,:;]+$/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .slice(0, 6)
+        .join(" ");
+    const PROMPT =
+      "Read only the largest headline text on this slide. Reply with the cleaned title in Title Case, max 6 words, no punctuation or quotes. If no headline exists, reply 'Untitled'.";
+
+    const { supabase } = context;
+    const fallback = `${pad2(data.slideIndex + 1)} Slide`;
+    const apiKey = process.env.LOVABLE_API_KEY;
+    let title = "Slide";
+
+    if (apiKey) {
+      try {
+        const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: PROMPT },
+                  { type: "image_url", image_url: { url: data.imageUrl } },
+                ],
+              },
+            ],
+          }),
+        });
+        if (resp.ok) {
+          const j = await resp.json();
+          const text: string = j?.choices?.[0]?.message?.content ?? "";
+          const cleaned = cleanTitle(text);
+          if (cleaned && cleaned.toLowerCase() !== "untitled") title = cleaned;
+        }
+      } catch (e) {
+        console.error("extractSlideTitle:", e);
+      }
+    }
+
+    const label = `${pad2(data.slideIndex + 1)} ${title}`;
+    const { error } = await supabase
+      .from("deck_slides")
+      .update({ label })
+      .eq("id", data.slideId);
+    if (error) return { label: fallback };
+    return { label };
+  });
+
+export const renumberDeckLabels = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({ deckId: z.string().uuid(), variant: z.string().min(1).max(40) })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const { supabase } = context;
+    const { data: rows, error } = await supabase
+      .from("deck_slides")
+      .select("id,slide_index,label")
+      .eq("deck_id", data.deckId)
+      .eq("variant", data.variant)
+      .order("slide_index", { ascending: true });
+    if (error) throw new Error(error.message);
+    for (const row of rows ?? []) {
+      const stripped = (row.label ?? "").replace(/^\s*\d{1,3}\s+/, "").trim();
+      const next = `${pad2(row.slide_index + 1)} ${stripped || "Slide"}`;
+      const { error: upErr } = await supabase
+        .from("deck_slides")
+        .update({ label: next })
+        .eq("id", row.id);
+      if (upErr) throw new Error(upErr.message);
+    }
     return { ok: true };
   });
 
