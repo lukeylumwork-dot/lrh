@@ -324,6 +324,10 @@ function AdminPage() {
               await deleteSlide({ data: { slideId: id } });
               await reload();
             }}
+            onRename={async (id, label) => {
+              await renameSlide({ data: { slideId: id, label } });
+              await reload();
+            }}
           />
         </div>
 
