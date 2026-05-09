@@ -229,24 +229,6 @@ export const renameSlide = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const TITLE_PROMPT =
-  "Read only the largest headline text on this slide. Reply with the cleaned title in Title Case, max 6 words, no punctuation or quotes. If no headline exists, reply 'Untitled'.";
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function cleanTitle(raw: string): string {
-  return raw
-    .replace(/["'`]/g, "")
-    .replace(/[.!?,:;]+$/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ")
-    .slice(0, 6)
-    .join(" ");
-}
-
 export const extractSlideTitle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -259,6 +241,19 @@ export const extractSlideTitle = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<{ label: string }> => {
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const cleanTitle = (raw: string): string =>
+      raw
+        .replace(/["'`]/g, "")
+        .replace(/[.!?,:;]+$/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .slice(0, 6)
+        .join(" ");
+    const PROMPT =
+      "Read only the largest headline text on this slide. Reply with the cleaned title in Title Case, max 6 words, no punctuation or quotes. If no headline exists, reply 'Untitled'.";
+
     const { supabase } = context;
     const fallback = `${pad2(data.slideIndex + 1)} Slide`;
     const apiKey = process.env.LOVABLE_API_KEY;
@@ -278,7 +273,7 @@ export const extractSlideTitle = createServerFn({ method: "POST" })
               {
                 role: "user",
                 content: [
-                  { type: "text", text: TITLE_PROMPT },
+                  { type: "text", text: PROMPT },
                   { type: "image_url", image_url: { url: data.imageUrl } },
                 ],
               },
