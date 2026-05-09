@@ -1,7 +1,6 @@
 import { GenericSlide } from "./editor/GenericSlide";
 import type { Block } from "./editor/types";
 import { SlideFooter } from "./SlideLayout";
-import { assets } from "./assets";
 
 const PAD_X = 6.25; // matches --lrh-slide-padding-x (~120px on 1920)
 const PAD_Y = 6.0;
@@ -32,12 +31,10 @@ export function TitleSlide() {
       </div>
     ),
     hero: (
-      <div className="h-full w-full flex items-center justify-center">
-        <img
-          src={assets.brand.primary}
-          alt="London Reporting House"
-          className="max-h-[28rem] max-w-full object-contain"
-        />
+      <div className="h-full w-full flex items-center justify-end pr-4">
+        <div className="font-heading text-[10rem] leading-none font-bold tracking-tight text-[var(--lrh-blue-500)]/15 select-none">
+          LRH
+        </div>
       </div>
     ),
     footer: <SlideFooter page={1} />,
