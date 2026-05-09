@@ -292,6 +292,20 @@ function AdminPage() {
             >
               {placing ? "Click slide to place…" : "Add hotspot"}
             </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await renumberDeckLabels({ data: { deckId, variant } });
+                  await reload();
+                  toast.success("Slide labels renumbered");
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : String(e));
+                }
+              }}
+            >
+              Renumber labels
+            </Button>
           </div>
 
           <DeckViewer
