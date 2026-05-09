@@ -95,8 +95,12 @@ function AdminPage() {
         variantSlides.length > 0
           ? Math.max(...variantSlides.map((s) => s.slide_index)) + 1
           : 0;
+      // Preserve order by sorting filenames ascending (browsers don't guarantee order).
+      const sorted = Array.from(files).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
+      );
       let idx = startIndex;
-      for (const file of Array.from(files)) {
+      for (const file of sorted) {
         if (file.size > MAX_BYTES) {
           toast.error(`${file.name} is over 10MB`);
           continue;
@@ -117,7 +121,7 @@ function AdminPage() {
         const { data: pub } = supabase.storage
           .from("interactive-deck-slides")
           .getPublicUrl(path);
-        await upsertSlide({
+        const { id: slideId } = await upsertSlide({
           data: {
             deckId,
             variant,
@@ -125,7 +129,17 @@ function AdminPage() {
             imageUrl: pub.publicUrl,
           },
         });
+        // Auto-name via vision; failure is non-fatal (fallback label set server-side).
+        try {
+          await extractSlideTitle({
+            data: { slideId, imageUrl: pub.publicUrl, slideIndex: idx },
+          });
+        } catch (e) {
+          console.error("title extract failed", e);
+        }
         idx++;
+        // Light pacing to stay under the gateway rate limit on a 10-file batch.
+        await new Promise((r) => setTimeout(r, 250));
       }
       await reload();
       toast.success("Slides uploaded");
