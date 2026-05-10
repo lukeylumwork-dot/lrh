@@ -344,3 +344,21 @@ export function DeckViewer({
     </div>
   );
 }
+
+function ShortcutRow({ keys, label }: { keys: string[]; label: string }) {
+  return (
+    <li className="flex items-center justify-between gap-4">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="flex gap-1">
+        {keys.map((k) => (
+          <kbd
+            key={k}
+            className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground"
+          >
+            {k}
+          </kbd>
+        ))}
+      </span>
+    </li>
+  );
+}
