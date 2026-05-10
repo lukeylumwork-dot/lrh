@@ -318,15 +318,17 @@ function AdminPage() {
             </Button>
           </div>
 
-          <DeckViewer
-            slides={bundle.slides}
-            hotspots={bundle.hotspots}
-            variant={variant}
-            showHotspotOutlines
-            onSlideClick={handleSlideClick}
-            onHotspotClick={(h) => setSelectedHotspot(h)}
-            selectedHotspotId={selectedHotspot?.id ?? null}
-          />
+          <div className={placing ? "cursor-crosshair" : undefined}>
+            <DeckViewer
+              slides={bundle.slides}
+              hotspots={bundle.hotspots}
+              variant={variant}
+              showHotspotOutlines
+              onSlideClick={handleSlideClick}
+              onHotspotClick={(h) => setSelectedHotspot(h)}
+              selectedHotspotId={selectedHotspot?.id ?? null}
+            />
+          </div>
 
           <SlidesList
             slides={variantSlides}
