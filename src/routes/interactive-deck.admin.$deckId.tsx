@@ -67,6 +67,16 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, deckId]);
 
+  // Esc cancels hotspot placement.
+  useEffect(() => {
+    if (!placing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPlacing(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [placing]);
+
   const variants = useMemo(() => {
     const set = new Set<string>(["Light"]);
     bundle?.slides.forEach((s) => set.add(s.variant));
@@ -308,15 +318,17 @@ function AdminPage() {
             </Button>
           </div>
 
-          <DeckViewer
-            slides={bundle.slides}
-            hotspots={bundle.hotspots}
-            variant={variant}
-            showHotspotOutlines
-            onSlideClick={handleSlideClick}
-            onHotspotClick={(h) => setSelectedHotspot(h)}
-            selectedHotspotId={selectedHotspot?.id ?? null}
-          />
+          <div className={placing ? "cursor-crosshair" : undefined}>
+            <DeckViewer
+              slides={bundle.slides}
+              hotspots={bundle.hotspots}
+              variant={variant}
+              showHotspotOutlines
+              onSlideClick={handleSlideClick}
+              onHotspotClick={(h) => setSelectedHotspot(h)}
+              selectedHotspotId={selectedHotspot?.id ?? null}
+            />
+          </div>
 
           <SlidesList
             slides={variantSlides}
