@@ -3,7 +3,7 @@ import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.function
 import { Hotspot } from "./Hotspot";
 import { HotspotModal } from "./HotspotModal";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Keyboard, Presentation, X } from "lucide-react";
 
 interface Props {
   slides: DeckSlideDTO[];
