@@ -160,6 +160,41 @@ export function DeckViewer({
             />
           ))}
         </div>
+
+        {/* Edge arrow overlays — visible in normal & fullscreen */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            goPrev();
+          }}
+          disabled={index === 0}
+          aria-label="Previous slide"
+          className="group absolute left-0 top-0 z-20 flex h-full w-[12%] items-center justify-start pl-3 opacity-0 transition-opacity hover:opacity-100 focus:opacity-100 disabled:pointer-events-none"
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-transform group-hover:scale-110">
+            <ChevronLeft className="h-6 w-6" />
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            goNext();
+          }}
+          disabled={index === variantSlides.length - 1}
+          aria-label="Next slide"
+          className="group absolute right-0 top-0 z-20 flex h-full w-[12%] items-center justify-end pr-3 opacity-0 transition-opacity hover:opacity-100 focus:opacity-100 disabled:pointer-events-none"
+        >
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-transform group-hover:scale-110">
+            <ChevronRight className="h-6 w-6" />
+          </span>
+        </button>
+
+        {/* Slide counter pill (no thumbnails) */}
+        <div className="pointer-events-none absolute bottom-3 right-3 z-20 rounded-full bg-black/60 px-3 py-1 text-xs tabular-nums text-white backdrop-blur-sm">
+          {index + 1} / {variantSlides.length}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
