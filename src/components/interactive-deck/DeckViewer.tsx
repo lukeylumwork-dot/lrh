@@ -217,29 +217,123 @@ export function DeckViewer({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={goPrev}
-          disabled={index === 0}
-          aria-label="Previous slide"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <span className="text-sm tabular-nums text-muted-foreground">
-          {index + 1} / {variantSlides.length}
-        </span>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={goNext}
-          disabled={index === variantSlides.length - 1}
-          aria-label="Next slide"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="flex w-full max-w-6xl items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goPrev}
+            disabled={index === 0}
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm tabular-nums text-muted-foreground">
+            {index + 1} / {variantSlides.length}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goNext}
+            disabled={index === variantSlides.length - 1}
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={presenter ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPresenter((v) => !v)}
+            aria-pressed={presenter}
+            title="Toggle presenter view (P)"
+          >
+            <Presentation className="mr-2 h-4 w-4" />
+            Presenter
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowShortcuts((v) => !v)}
+            aria-label="Keyboard shortcuts"
+            title="Shortcuts (?)"
+          >
+            <Keyboard className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+
+      {presenter && (
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-4 rounded-lg border bg-muted/30 p-4 md:grid-cols-[2fr_1fr]">
+          <div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Current — slide {index + 1}
+            </div>
+            <div className="relative overflow-hidden rounded border bg-black" style={{ aspectRatio: "16 / 9" }}>
+              <img
+                src={current.image_url}
+                alt="Current slide"
+                className="absolute inset-0 h-full w-full object-contain"
+                draggable={false}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {nextSlide ? `Next — slide ${index + 2}` : "End of deck"}
+            </div>
+            <div className="relative overflow-hidden rounded border bg-black" style={{ aspectRatio: "16 / 9" }}>
+              {nextSlide ? (
+                <img
+                  src={nextSlide.image_url}
+                  alt="Next slide"
+                  className="absolute inset-0 h-full w-full object-contain"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-white/60">
+                  No more slides
+                </div>
+              )}
+            </div>
+            <div className="mt-3 rounded border bg-background/60 p-3 text-xs text-muted-foreground">
+              <div className="mb-1 font-medium text-foreground">Shortcuts</div>
+              <div>← / → · Space — navigate</div>
+              <div>Home / End — first / last</div>
+              <div>P — toggle presenter · ? — shortcuts</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showShortcuts && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg border bg-background p-5 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Keyboard shortcuts</h3>
+              <Button variant="ghost" size="icon" onClick={() => setShowShortcuts(false)} aria-label="Close">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <ul className="space-y-2 text-sm">
+              <ShortcutRow keys={["→", "Space", "PgDn"]} label="Next slide" />
+              <ShortcutRow keys={["←", "PgUp"]} label="Previous slide" />
+              <ShortcutRow keys={["Home"]} label="First slide" />
+              <ShortcutRow keys={["End"]} label="Last slide" />
+              <ShortcutRow keys={["P"]} label="Toggle presenter view" />
+              <ShortcutRow keys={["?"]} label="Show this panel" />
+              <ShortcutRow keys={["Esc"]} label="Close panel" />
+            </ul>
+          </div>
+        </div>
+      )}
 
       <HotspotModal
         open={modal !== null}
