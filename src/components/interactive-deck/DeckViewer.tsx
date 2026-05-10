@@ -60,12 +60,28 @@ export function DeckViewer({
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.key === "ArrowRight" || e.key === " ") {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
         e.preventDefault();
         goNext();
-      } else if (e.key === "ArrowLeft") {
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
         goPrev();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setDirection(-1);
+        setIndex(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setDirection(1);
+        setIndex(Math.max(0, variantSlides.length - 1));
+      } else if (e.key === "p" || e.key === "P") {
+        e.preventDefault();
+        setPresenter((v) => !v);
+      } else if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+        e.preventDefault();
+        setShowShortcuts((v) => !v);
+      } else if (e.key === "Escape") {
+        setShowShortcuts(false);
       }
     };
     window.addEventListener("keydown", onKey);
