@@ -35,6 +35,8 @@ export function DeckViewer({
   const [index, setIndex] = useState(0);
   const [modal, setModal] = useState<{ title: string; body: string } | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [presenter, setPresenter] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
 
   useEffect(() => {
