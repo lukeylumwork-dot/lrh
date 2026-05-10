@@ -116,6 +116,8 @@ export function DeckViewer({
   }
 
   const current = variantSlides[index];
+  const nextSlide =
+    index < variantSlides.length - 1 ? variantSlides[index + 1] : null;
   const currentHotspots = hotspots.filter(
     (h) => h.variant === variant && h.slide_index === current.slide_index,
   );
