@@ -100,7 +100,7 @@ const defaultBlocks: Block[] = [
     h: 12,
   },
 
-  // Four cards — each broken into: container, icon, title, body
+  // Four cards — each broken into: container (card kind), icon, title, body
   ...items.flatMap((item, i) => {
     const n = i + 1;
     const { x, y } = cardOrigin(i);
@@ -108,17 +108,16 @@ const defaultBlocks: Block[] = [
     const bodyY = titleY + TITLE_H + TITLE_MB;
     const bodyH = CARD_H - CARD_PAD_Y - TITLE_H - TITLE_MB - CARD_PAD_Y;
     return [
-      // Card background / container
+      // Card background — uses the "card" kind so block.style overrides work directly
       {
         id: `card-container-${n}`,
-        kind: "region" as const,
-        regionId: `card-container-${n}`,
+        kind: "card" as const,
         x,
         y,
         w: CARD_W,
         h: CARD_H,
       },
-      // Icon
+      // Icon region — fills the block bounds, centered
       {
         id: `icon-${n}`,
         kind: "region" as const,
@@ -170,7 +169,6 @@ const defaultBlocks: Block[] = [
 // Component
 // ---------------------------------------------------------------------------
 export function ProblemSlide() {
-  // Build region renderers for each card's container and icon.
   const regions: Record<string, React.ReactNode> = {
     footer: <SlideFooter page={3} />,
   };
@@ -178,12 +176,6 @@ export function ProblemSlide() {
   items.forEach((item, i) => {
     const n = i + 1;
     const Icon = item.icon;
-
-    // Card background — renders the card border + fill, fills the block bounds
-    regions[`card-container-${n}`] = (
-      <div className="w-full h-full rounded-md bg-card border border-border" />
-    );
-
     // Icon — fills the block bounds, centered
     regions[`icon-${n}`] = (
       <div className="w-full h-full flex items-center justify-center rounded-md bg-[var(--lrh-blue)] text-white">

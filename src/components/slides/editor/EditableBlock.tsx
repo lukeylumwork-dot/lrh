@@ -370,11 +370,8 @@ export function EditableBlock({
             peers.blocks,
             block.id,
           );
-          if (snapX !== undefined) nw = Math.max(3, snapX - startSize.x + nw - (startSize.x + nw - (startSize.x + nw)));
-          // Simpler: re-derive nw/nh from edge snap targets.
           if (snapX !== undefined) {
             const candidate = snapX - startSize.x;
-            // Only snap when adjusting right edge (snap target near right edge).
             if (Math.abs(candidate - nw) < 2) nw = Math.max(3, candidate);
           }
           if (snapY !== undefined) {
@@ -410,6 +407,62 @@ export function EditableBlock({
       defaults,
       peers,
     ],
+  );
+
+  const isTextual =
+    block.kind === "title" ||
+    block.kind === "text" ||
+    block.kind === "bullets" ||
+    block.kind === "eyebrow";
+
+  // Alt+Click on textual content picks the clicked word as the slide's
+  // highlight keyword (or clears it if the click hits whitespace).
+  // Defined before the early return to satisfy rules-of-hooks.
+  const pickHighlightAt = useCallback(
+    (clientX: number, clientY: number) => {
+      type DocWithCaret = Document & {
+        caretPositionFromPoint?: (
+          x: number,
+          y: number,
+        ) => { offsetNode: Node; offset: number } | null;
+        caretRangeFromPoint?: (x: number, y: number) => Range | null;
+      };
+      const doc = document as DocWithCaret;
+      let node: Node | null = null;
+      let offset = 0;
+      if (doc.caretPositionFromPoint) {
+        const pos = doc.caretPositionFromPoint(clientX, clientY);
+        if (pos) {
+          node = pos.offsetNode;
+          offset = pos.offset;
+        }
+      } else if (doc.caretRangeFromPoint) {
+        const r = doc.caretRangeFromPoint(clientX, clientY);
+        if (r) {
+          node = r.startContainer;
+          offset = r.startOffset;
+        }
+      }
+      if (!node || node.nodeType !== Node.TEXT_NODE) {
+        updateOverride(deckKind, slideKey, { highlightKeyword: null }, defaults);
+        return;
+      }
+      const text = node.textContent ?? "";
+      // Word characters incl. hyphens.
+      const isWord = (c: string) => /[\w-]/.test(c);
+      let s = offset;
+      let e = offset;
+      while (s > 0 && isWord(text[s - 1])) s--;
+      while (e < text.length && isWord(text[e])) e++;
+      const word = text.slice(s, e).trim();
+      updateOverride(
+        deckKind,
+        slideKey,
+        { highlightKeyword: word || null },
+        defaults,
+      );
+    },
+    [deckKind, slideKey, defaults, updateOverride],
   );
 
   if (block.hidden && !editing) return null;
@@ -454,6 +507,9 @@ export function EditableBlock({
     switch (block.kind) {
       case "region":
         return peers.renderRegion?.(block.regionId ?? block.id) ?? null;
+      case "card":
+        // Appearance lives on the outer container div (via style + cardClass).
+        return null;
       case "title":
         return editingThis ? (
           <textarea
@@ -467,7 +523,10 @@ export function EditableBlock({
             className="w-full h-full bg-transparent outline-none resize-none font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl"
           />
         ) : (
-          <h1 style={textStyle} className="font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl">
+          <h1
+            style={textStyle}
+            className="font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl"
+          >
             {withHighlight(block.text ?? "", highlight)}
           </h1>
         );
@@ -484,7 +543,10 @@ export function EditableBlock({
             className="w-full bg-transparent outline-none uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium text-[11px]"
           />
         ) : (
-          <div style={textStyle} className="text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium">
+          <div
+            style={textStyle}
+            className="text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium"
+          >
             {block.text}
           </div>
         );
@@ -501,7 +563,10 @@ export function EditableBlock({
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80"
           />
         ) : (
-          <p style={textStyle} className="text-base md:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
+          <p
+            style={textStyle}
+            className="text-base md:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap"
+          >
             {withHighlight(block.text ?? "", highlight)}
           </p>
         );
@@ -523,6 +588,7 @@ export function EditableBlock({
             {(block.bullets ?? []).map((b, i) => (
               <li
                 key={i}
+                style={textStyle}
                 className="flex gap-3 text-base md:text-lg leading-relaxed text-foreground/80"
               >
                 <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[var(--lrh-blue-500)] flex-shrink-0" />
@@ -546,58 +612,6 @@ export function EditableBlock({
         );
     }
   };
-
-  const isTextual =
-    block.kind === "title" ||
-    block.kind === "text" ||
-    block.kind === "bullets" ||
-    block.kind === "eyebrow";
-
-  // Alt+Click on textual content picks the clicked word as the slide's
-  // highlight keyword (or clears it if the click hits whitespace).
-  const pickHighlightAt = useCallback(
-    (clientX: number, clientY: number) => {
-      type DocWithCaret = Document & {
-        caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
-        caretRangeFromPoint?: (x: number, y: number) => Range | null;
-      };
-      const doc = document as DocWithCaret;
-      let node: Node | null = null;
-      let offset = 0;
-      if (doc.caretPositionFromPoint) {
-        const pos = doc.caretPositionFromPoint(clientX, clientY);
-        if (pos) {
-          node = pos.offsetNode;
-          offset = pos.offset;
-        }
-      } else if (doc.caretRangeFromPoint) {
-        const r = doc.caretRangeFromPoint(clientX, clientY);
-        if (r) {
-          node = r.startContainer;
-          offset = r.startOffset;
-        }
-      }
-      if (!node || node.nodeType !== Node.TEXT_NODE) {
-        updateOverride(deckKind, slideKey, { highlightKeyword: null }, defaults);
-        return;
-      }
-      const text = node.textContent ?? "";
-      // Word characters incl. hyphens.
-      const isWord = (c: string) => /[\w-]/.test(c);
-      let s = offset;
-      let e = offset;
-      while (s > 0 && isWord(text[s - 1])) s--;
-      while (e < text.length && isWord(text[e])) e++;
-      const word = text.slice(s, e).trim();
-      updateOverride(
-        deckKind,
-        slideKey,
-        { highlightKeyword: word || null },
-        defaults,
-      );
-    },
-    [deckKind, slideKey, defaults, updateOverride],
-  );
 
   return (
     <div
@@ -633,11 +647,15 @@ export function EditableBlock({
       }
       className={cn(
         "transition-shadow",
+        // card kind: apply card defaults on the outer div so block.style inline overrides win
+        block.kind === "card" && !block.backgroundColor && "bg-card",
+        block.kind === "card" && "border",
+        block.kind === "card" && !block.borderColor && "border-border",
+        block.kind === "card" && !block.borderRadius && "rounded-md",
         editing &&
           !inlineEdit &&
           "cursor-move hover:outline hover:outline-1 hover:outline-[var(--lrh-blue-500)]/40",
-        isSelected &&
-          "outline outline-2 outline-[var(--lrh-blue-500)] rounded-sm",
+        isSelected && "outline outline-2 outline-[var(--lrh-blue-500)] rounded-sm",
         inlineEdit && "cursor-text",
         block.hidden && "opacity-30",
         className,

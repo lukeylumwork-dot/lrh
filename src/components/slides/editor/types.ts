@@ -4,7 +4,8 @@ export type BlockKind =
   | "bullets"
   | "image"
   | "eyebrow"
-  | "region";
+  | "region"
+  | "card";
 
 export interface Block {
   id: string;
