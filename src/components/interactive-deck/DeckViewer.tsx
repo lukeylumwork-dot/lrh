@@ -181,6 +181,7 @@ export function DeckViewer({
               showOutline={showHotspotOutlines}
               selected={selectedHotspotId === h.id}
               slides={variantSlides}
+              subdomainRules={subdomainRules}
             />
           ))}
         </div>
