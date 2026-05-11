@@ -98,10 +98,11 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
     };
   }, [hovered]);
 
-  const fullUrl =
+  const rawUrl =
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
       ? String((hotspot.action_payload as { url?: unknown })?.url ?? "").trim()
       : "";
+  const fullUrl = rawUrl ? (normalizeUrl(rawUrl)?.pretty ?? rawUrl) : "";
 
   const actionColor: "url" | "goto" | "modal" | "default" =
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
