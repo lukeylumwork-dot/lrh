@@ -52,7 +52,8 @@ function shortDomain(raw: string, rules: SubdomainStripRules): string {
 
 function actionSummary(
   h: HotspotDTO,
-  slides?: DeckSlideDTO[],
+  slides: DeckSlideDTO[] | undefined,
+  rules: SubdomainStripRules,
 ): { icon: typeof Sparkles; text: string } {
   const p = (h.action_payload ?? {}) as Record<string, unknown>;
   switch (h.action_type) {
@@ -60,7 +61,7 @@ function actionSummary(
       return { icon: MessageSquare, text: `Modal · ${String(p.title ?? "Untitled")}` };
     case "open_url":
     case "link":
-      return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""))}` };
+      return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""), rules)}` };
     case "goto_slide": {
       const target = Number(p.slide ?? -1);
       if (!Number.isFinite(target) || target < 0) {
