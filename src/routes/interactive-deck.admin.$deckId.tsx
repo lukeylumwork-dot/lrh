@@ -57,6 +57,7 @@ function AdminPage() {
   const [placing, setPlacing] = useState(false);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotDTO | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [subdomainRules] = useSubdomainStripRules(deckId);
 
   const reload = async () => {
     const b = await getDeckBundle({ data: { deckId } });
