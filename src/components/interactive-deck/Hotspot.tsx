@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, MessageSquare, MoveRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
+import {
+  applyHostRules,
+  DEFAULT_RULES,
+  type SubdomainStripRules,
+} from "@/lib/subdomainStripRules";
 
 interface Props {
   hotspot: HotspotDTO;
@@ -9,25 +14,23 @@ interface Props {
   showOutline?: boolean;
   selected?: boolean;
   slides?: DeckSlideDTO[];
+  /** Per-deck overrides for which subdomains to strip in URL previews. */
+  subdomainRules?: SubdomainStripRules;
 }
 
 const TRACKING_PARAM_RE =
   /^(utm_|mc_|hsa_|hsenc|hsctatracking|matomo_|pk_|piwik_|ga_|gclid|gclsrc|fbclid|msclkid|yclid|dclid|twclid|igshid|li_fat_id|wickedid|s_kwcid|trk|trkcampaign|ref|ref_|ref_src|ref_url|source|cmpid|campaign_id|spm)/i;
-const STRIPPABLE_SUBDOMAINS = new Set(["www", "m", "mobile", "amp", "en"]);
 
-function normalizeUrl(raw: string): { host: string; path: string; search: string; pretty: string } | null {
+function normalizeUrl(
+  raw: string,
+  rules: SubdomainStripRules,
+): { host: string; path: string; search: string; pretty: string } | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   try {
     const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     const u = new URL(withProto);
-    let host = u.hostname.toLowerCase();
-    const parts = host.split(".");
-    if (parts.length > 2 && STRIPPABLE_SUBDOMAINS.has(parts[0])) {
-      host = parts.slice(1).join(".");
-    } else {
-      host = host.replace(/^www\./, "");
-    }
+    const host = applyHostRules(u.hostname, rules);
     const kept: string[] = [];
     u.searchParams.forEach((v, k) => {
       if (!TRACKING_PARAM_RE.test(k)) kept.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
@@ -40,9 +43,9 @@ function normalizeUrl(raw: string): { host: string; path: string; search: string
   }
 }
 
-function shortDomain(raw: string): string {
+function shortDomain(raw: string, rules: SubdomainStripRules): string {
   if (!raw.trim()) return "(not set)";
-  const n = normalizeUrl(raw);
+  const n = normalizeUrl(raw, rules);
   const full = n ? n.pretty : raw.trim();
   return full.length > 38 ? `${full.slice(0, 37)}…` : full;
 }
