@@ -319,6 +319,7 @@ function AdminPage() {
             >
               Renumber labels
             </Button>
+            <SubdomainRulesPopover deckId={deckId} />
           </div>
 
           <div className={placing ? "cursor-crosshair" : undefined}>
