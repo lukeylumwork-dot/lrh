@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
+import { SubdomainRulesPopover } from "@/components/interactive-deck/SubdomainRulesPopover";
+import { useSubdomainStripRules } from "@/lib/subdomainStripRules";
 import {
   Select,
   SelectContent,
