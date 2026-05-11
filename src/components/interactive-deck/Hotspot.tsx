@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { ExternalLink, MessageSquare, MoveRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
+import {
+  applyHostRules,
+  DEFAULT_RULES,
+  type SubdomainStripRules,
+} from "@/lib/subdomainStripRules";
 
 interface Props {
   hotspot: HotspotDTO;
@@ -9,25 +14,23 @@ interface Props {
   showOutline?: boolean;
   selected?: boolean;
   slides?: DeckSlideDTO[];
+  /** Per-deck overrides for which subdomains to strip in URL previews. */
+  subdomainRules?: SubdomainStripRules;
 }
 
 const TRACKING_PARAM_RE =
   /^(utm_|mc_|hsa_|hsenc|hsctatracking|matomo_|pk_|piwik_|ga_|gclid|gclsrc|fbclid|msclkid|yclid|dclid|twclid|igshid|li_fat_id|wickedid|s_kwcid|trk|trkcampaign|ref|ref_|ref_src|ref_url|source|cmpid|campaign_id|spm)/i;
-const STRIPPABLE_SUBDOMAINS = new Set(["www", "m", "mobile", "amp", "en"]);
 
-function normalizeUrl(raw: string): { host: string; path: string; search: string; pretty: string } | null {
+function normalizeUrl(
+  raw: string,
+  rules: SubdomainStripRules,
+): { host: string; path: string; search: string; pretty: string } | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
   try {
     const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     const u = new URL(withProto);
-    let host = u.hostname.toLowerCase();
-    const parts = host.split(".");
-    if (parts.length > 2 && STRIPPABLE_SUBDOMAINS.has(parts[0])) {
-      host = parts.slice(1).join(".");
-    } else {
-      host = host.replace(/^www\./, "");
-    }
+    const host = applyHostRules(u.hostname, rules);
     const kept: string[] = [];
     u.searchParams.forEach((v, k) => {
       if (!TRACKING_PARAM_RE.test(k)) kept.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
@@ -40,16 +43,17 @@ function normalizeUrl(raw: string): { host: string; path: string; search: string
   }
 }
 
-function shortDomain(raw: string): string {
+function shortDomain(raw: string, rules: SubdomainStripRules): string {
   if (!raw.trim()) return "(not set)";
-  const n = normalizeUrl(raw);
+  const n = normalizeUrl(raw, rules);
   const full = n ? n.pretty : raw.trim();
   return full.length > 38 ? `${full.slice(0, 37)}…` : full;
 }
 
 function actionSummary(
   h: HotspotDTO,
-  slides?: DeckSlideDTO[],
+  slides: DeckSlideDTO[] | undefined,
+  rules: SubdomainStripRules,
 ): { icon: typeof Sparkles; text: string } {
   const p = (h.action_payload ?? {}) as Record<string, unknown>;
   switch (h.action_type) {
@@ -57,7 +61,7 @@ function actionSummary(
       return { icon: MessageSquare, text: `Modal · ${String(p.title ?? "Untitled")}` };
     case "open_url":
     case "link":
-      return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""))}` };
+      return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""), rules)}` };
     case "goto_slide": {
       const target = Number(p.slide ?? -1);
       if (!Number.isFinite(target) || target < 0) {
@@ -81,7 +85,8 @@ function actionSummary(
   }
 }
 
-export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: Props) {
+export function Hotspot({ hotspot, onActivate, showOutline, selected, slides, subdomainRules }: Props) {
+  const rules = subdomainRules ?? DEFAULT_RULES;
   const [hovered, setHovered] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,7 +107,7 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
       ? String((hotspot.action_payload as { url?: unknown })?.url ?? "").trim()
       : "";
-  const fullUrl = rawUrl ? (normalizeUrl(rawUrl)?.pretty ?? rawUrl) : "";
+  const fullUrl = rawUrl ? (normalizeUrl(rawUrl, rules)?.pretty ?? rawUrl) : "";
 
   const actionColor: "url" | "goto" | "modal" | "default" =
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
@@ -157,7 +162,7 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
         >
           <div className="font-medium">{hotspot.label ?? "Hotspot"}</div>
           {(() => {
-            const { icon: Icon, text } = actionSummary(hotspot, slides);
+            const { icon: Icon, text } = actionSummary(hotspot, slides, rules);
             return (
               <div className="mt-0.5 flex items-start gap-1 text-muted-foreground">
                 <Icon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />

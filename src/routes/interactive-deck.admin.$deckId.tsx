@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariantToggle } from "@/components/interactive-deck/VariantToggle";
 import { DeckViewer } from "@/components/interactive-deck/DeckViewer";
+import { SubdomainRulesPopover } from "@/components/interactive-deck/SubdomainRulesPopover";
+import { useSubdomainStripRules } from "@/lib/subdomainStripRules";
 import {
   Select,
   SelectContent,
@@ -55,6 +57,7 @@ function AdminPage() {
   const [placing, setPlacing] = useState(false);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotDTO | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [subdomainRules] = useSubdomainStripRules(deckId);
 
   const reload = async () => {
     const b = await getDeckBundle({ data: { deckId } });
@@ -316,6 +319,7 @@ function AdminPage() {
             >
               Renumber labels
             </Button>
+            <SubdomainRulesPopover deckId={deckId} />
           </div>
 
           <div className={placing ? "cursor-crosshair" : undefined}>
@@ -327,6 +331,7 @@ function AdminPage() {
               onSlideClick={handleSlideClick}
               onHotspotClick={(h) => setSelectedHotspot(h)}
               selectedHotspotId={selectedHotspot?.id ?? null}
+              subdomainRules={subdomainRules}
             />
           </div>
 
