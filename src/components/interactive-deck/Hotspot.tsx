@@ -41,33 +41,10 @@ function normalizeUrl(raw: string): { host: string; path: string; search: string
 }
 
 function shortDomain(raw: string): string {
-  const trimmed = raw.trim();
-  if (!trimmed) return "(not set)";
-  try {
-    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    const u = new URL(withProto);
-
-    let host = u.hostname.toLowerCase();
-    const parts = host.split(".");
-    if (parts.length > 2 && STRIPPABLE_SUBDOMAINS.has(parts[0])) {
-      host = parts.slice(1).join(".");
-    } else {
-      host = host.replace(/^www\./, "");
-    }
-
-    // Drop tracking params
-    const kept: string[] = [];
-    u.searchParams.forEach((v, k) => {
-      if (!TRACKING_PARAM_RE.test(k)) kept.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
-    });
-    const search = kept.length ? `?${kept.join("&")}` : "";
-
-    let path = u.pathname && u.pathname !== "/" ? u.pathname.replace(/\/+$/, "") : "";
-    const full = `${host}${path}${search}`;
-    return full.length > 38 ? `${full.slice(0, 37)}…` : full;
-  } catch {
-    return trimmed.length > 38 ? `${trimmed.slice(0, 37)}…` : trimmed;
-  }
+  if (!raw.trim()) return "(not set)";
+  const n = normalizeUrl(raw);
+  const full = n ? n.pretty : raw.trim();
+  return full.length > 38 ? `${full.slice(0, 37)}…` : full;
 }
 
 function actionSummary(
