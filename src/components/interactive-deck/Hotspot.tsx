@@ -54,6 +54,27 @@ function actionSummary(
 }
 
 export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: Props) {
+  const [hovered, setHovered] = useState(false);
+  const [showFull, setShowFull] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (hovered) {
+      timer.current = setTimeout(() => setShowFull(true), 600);
+    } else {
+      if (timer.current) clearTimeout(timer.current);
+      setShowFull(false);
+    }
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [hovered]);
+
+  const fullUrl =
+    hotspot.action_type === "open_url" || hotspot.action_type === "link"
+      ? String((hotspot.action_payload as { url?: unknown })?.url ?? "").trim()
+      : "";
+
   return (
     <div
       className="group absolute"
@@ -63,6 +84,8 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
         width: `${hotspot.w}%`,
         height: `${hotspot.h}%`,
       }}
+      onMouseEnter={() => showOutline && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <button
         type="button"
@@ -82,15 +105,18 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
       />
       {showOutline && (
         <div
-          className="pointer-events-none absolute left-1/2 top-0 z-30 hidden -translate-x-1/2 -translate-y-[calc(100%+6px)] whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] leading-tight text-popover-foreground shadow-md group-hover:block"
+          className={cn(
+            "pointer-events-none absolute left-1/2 top-0 z-30 hidden -translate-x-1/2 -translate-y-[calc(100%+6px)] rounded-md border border-border bg-popover px-2 py-1 text-[11px] leading-tight text-popover-foreground shadow-md group-hover:block",
+            showFull && fullUrl ? "max-w-[480px] whitespace-normal break-all" : "whitespace-nowrap",
+          )}
         >
           <div className="font-medium">{hotspot.label ?? "Hotspot"}</div>
           {(() => {
             const { icon: Icon, text } = actionSummary(hotspot, slides);
             return (
-              <div className="mt-0.5 flex items-center gap-1 text-muted-foreground">
-                <Icon className="h-3 w-3 shrink-0" aria-hidden />
-                <span>{text}</span>
+              <div className="mt-0.5 flex items-start gap-1 text-muted-foreground">
+                <Icon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                <span>{showFull && fullUrl ? `URL · ${fullUrl}` : text}</span>
               </div>
             );
           })()}
