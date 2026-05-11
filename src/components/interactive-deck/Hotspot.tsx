@@ -92,9 +92,9 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
           : "default";
 
   const outlineClasses = {
-    url: "border-[color:var(--hotspot-url)]/80 bg-[color:var(--hotspot-url)]/15 hover:bg-[color:var(--hotspot-url)]/30",
-    goto: "border-[color:var(--hotspot-goto)]/80 bg-[color:var(--hotspot-goto)]/15 hover:bg-[color:var(--hotspot-goto)]/30",
-    modal: "border-[color:var(--hotspot-modal)]/80 bg-[color:var(--hotspot-modal)]/15 hover:bg-[color:var(--hotspot-modal)]/30",
+    url: "border-hotspot-url/80 bg-hotspot-url/15 hover:bg-hotspot-url/30",
+    goto: "border-hotspot-goto/80 bg-hotspot-goto/15 hover:bg-hotspot-goto/30",
+    modal: "border-hotspot-modal/80 bg-hotspot-modal/15 hover:bg-hotspot-modal/30",
     default: "border-primary/70 bg-primary/10 hover:bg-primary/25",
   } as const;
 
