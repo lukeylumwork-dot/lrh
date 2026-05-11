@@ -1,3 +1,4 @@
+import { ExternalLink, MessageSquare, MoveRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
 
@@ -24,26 +25,30 @@ function shortDomain(raw: string): string {
   }
 }
 
-function actionSummary(h: HotspotDTO, slides?: DeckSlideDTO[]): string {
+function actionSummary(
+  h: HotspotDTO,
+  slides?: DeckSlideDTO[],
+): { icon: typeof Sparkles; text: string } {
   const p = (h.action_payload ?? {}) as Record<string, unknown>;
   switch (h.action_type) {
     case "open_modal":
-      return `Modal · ${String(p.title ?? "Untitled")}`;
+      return { icon: MessageSquare, text: `Modal · ${String(p.title ?? "Untitled")}` };
     case "open_url":
     case "link":
-      return `URL · ${shortDomain(String(p.url ?? ""))}`;
+      return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""))}` };
     case "goto_slide": {
       const target = Number(p.slide ?? -1);
       const match = slides?.find(
         (s) => s.slide_index === target && s.variant === h.variant,
       );
       const title = (match?.label ?? "").replace(/^\s*\d{1,3}\s+/, "").trim();
-      return title
+      const text = title
         ? `Go to ${String(target + 1).padStart(2, "0")} · ${title}`
         : `Go to slide ${target + 1}`;
+      return { icon: MoveRight, text };
     }
     default:
-      return h.action_type;
+      return { icon: Sparkles, text: h.action_type };
   }
 }
 
@@ -79,7 +84,15 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
           className="pointer-events-none absolute left-1/2 top-0 z-30 hidden -translate-x-1/2 -translate-y-[calc(100%+6px)] whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] leading-tight text-popover-foreground shadow-md group-hover:block"
         >
           <div className="font-medium">{hotspot.label ?? "Hotspot"}</div>
-          <div className="text-muted-foreground">{actionSummary(hotspot, slides)}</div>
+          {(() => {
+            const { icon: Icon, text } = actionSummary(hotspot, slides);
+            return (
+              <div className="mt-0.5 flex items-center gap-1 text-muted-foreground">
+                <Icon className="h-3 w-3 shrink-0" aria-hidden />
+                <span>{text}</span>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
