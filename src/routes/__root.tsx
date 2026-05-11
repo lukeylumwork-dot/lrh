@@ -29,14 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "LRH Deck" },
+      { name: "description", content: "LRH Interactive Deck Builder & Presenter." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "LRH Deck" },
+      { property: "og:description", content: "LRH Interactive Deck Builder & Presenter." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "LRH Deck" },
+      { name: "twitter:description", content: "LRH Interactive Deck Builder & Presenter." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/84ZkfacwrBTY7HwueM573dwTpSv2/social-images/social-1778513167180-LRH_Primary_logo_navy_lrg.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/84ZkfacwrBTY7HwueM573dwTpSv2/social-images/social-1778513167180-LRH_Primary_logo_navy_lrg.webp" },
     ],
     links: [
       {
