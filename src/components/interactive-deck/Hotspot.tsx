@@ -82,6 +82,22 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
       ? String((hotspot.action_payload as { url?: unknown })?.url ?? "").trim()
       : "";
 
+  const actionColor: "url" | "goto" | "modal" | "default" =
+    hotspot.action_type === "open_url" || hotspot.action_type === "link"
+      ? "url"
+      : hotspot.action_type === "goto_slide"
+        ? "goto"
+        : hotspot.action_type === "open_modal"
+          ? "modal"
+          : "default";
+
+  const outlineClasses = {
+    url: "border-[color:var(--hotspot-url)]/80 bg-[color:var(--hotspot-url)]/15 hover:bg-[color:var(--hotspot-url)]/30",
+    goto: "border-[color:var(--hotspot-goto)]/80 bg-[color:var(--hotspot-goto)]/15 hover:bg-[color:var(--hotspot-goto)]/30",
+    modal: "border-[color:var(--hotspot-modal)]/80 bg-[color:var(--hotspot-modal)]/15 hover:bg-[color:var(--hotspot-modal)]/30",
+    default: "border-primary/70 bg-primary/10 hover:bg-primary/25",
+  } as const;
+
   return (
     <div
       className="group absolute"
@@ -105,7 +121,7 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
         className={cn(
           "absolute inset-0 cursor-pointer rounded-sm transition-all duration-150",
           showOutline
-            ? "border-2 border-primary/70 bg-primary/10 hover:bg-primary/25"
+            ? cn("border-2", outlineClasses[actionColor])
             : "bg-transparent ring-0 hover:bg-white/10 hover:ring-2 hover:ring-white/40 hover:shadow-lg",
           selected && "ring-2 ring-primary",
         )}
