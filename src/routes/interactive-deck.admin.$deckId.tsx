@@ -331,6 +331,7 @@ function AdminPage() {
               onSlideClick={handleSlideClick}
               onHotspotClick={(h) => setSelectedHotspot(h)}
               selectedHotspotId={selectedHotspot?.id ?? null}
+              subdomainRules={subdomainRules}
             />
           </div>
 
