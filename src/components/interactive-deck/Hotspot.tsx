@@ -39,13 +39,20 @@ function actionSummary(
       return { icon: ExternalLink, text: `URL · ${shortDomain(String(p.url ?? ""))}` };
     case "goto_slide": {
       const target = Number(p.slide ?? -1);
+      if (!Number.isFinite(target) || target < 0) {
+        return { icon: MoveRight, text: "Go to slide · target not set" };
+      }
       const match = slides?.find(
         (s) => s.slide_index === target && s.variant === h.variant,
       );
-      const title = (match?.label ?? "").replace(/^\s*\d{1,3}\s+/, "").trim();
+      const num = String(target + 1).padStart(2, "0");
+      if (!match) {
+        return { icon: MoveRight, text: `Go to slide ${num} · missing (target not found)` };
+      }
+      const title = (match.label ?? "").replace(/^\s*\d{1,3}\s+/, "").trim();
       const text = title
-        ? `Go to ${String(target + 1).padStart(2, "0")} · ${title}`
-        : `Go to slide ${target + 1}`;
+        ? `Go to ${num} · ${title}`
+        : `Go to slide ${num} · untitled`;
       return { icon: MoveRight, text };
     }
     default:
