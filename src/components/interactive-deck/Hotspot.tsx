@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, MessageSquare, MoveRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
