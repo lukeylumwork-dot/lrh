@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DeckSlideDTO, HotspotDTO } from "@/server/interactiveDeck.functions";
+import type { SubdomainStripRules } from "@/lib/subdomainStripRules";
 import { Hotspot } from "./Hotspot";
 import { HotspotModal } from "./HotspotModal";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ interface Props {
   onSlideClick?: (e: React.MouseEvent<HTMLDivElement>, slideIndex: number) => void;
   onHotspotClick?: (h: HotspotDTO) => void;
   selectedHotspotId?: string | null;
+  subdomainRules?: SubdomainStripRules;
 }
 
 export function DeckViewer({
@@ -23,6 +25,7 @@ export function DeckViewer({
   onSlideClick,
   onHotspotClick,
   selectedHotspotId,
+  subdomainRules,
 }: Props) {
   const variantSlides = useMemo(
     () =>
