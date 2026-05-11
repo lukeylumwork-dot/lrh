@@ -56,6 +56,49 @@ function sanitize(list: unknown): string[] | null {
   return Array.from(new Set(cleaned));
 }
 
+const EXPORT_KIND = "subdomain-strip-rules";
+const EXPORT_VERSION = 1;
+
+export function serializeRules(rules: SubdomainStripRules): string {
+  return JSON.stringify(
+    {
+      kind: EXPORT_KIND,
+      version: EXPORT_VERSION,
+      deny: sanitize(rules.deny) ?? [],
+      allow: sanitize(rules.allow) ?? [],
+    },
+    null,
+    2,
+  );
+}
+
+/**
+ * Parse an exported rules payload. Returns null when the payload is missing,
+ * not JSON, has the wrong kind, or has invalid deny/allow shapes.
+ */
+export function parseRulesPayload(text: string): SubdomainStripRules | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== "object") return null;
+  const obj = parsed as Record<string, unknown>;
+  if (obj.kind !== EXPORT_KIND) return null;
+  if (!Array.isArray(obj.deny) || !Array.isArray(obj.allow)) return null;
+  if (
+    !obj.deny.every((v) => typeof v === "string") ||
+    !obj.allow.every((v) => typeof v === "string")
+  ) {
+    return null;
+  }
+  return {
+    deny: sanitize(obj.deny) ?? [],
+    allow: sanitize(obj.allow) ?? [],
+  };
+}
+
 /** Reactive hook reading per-deck rules from localStorage with cross-tab sync. */
 export function useSubdomainStripRules(deckId: string | null | undefined) {
   const [rules, setRules] = useState<SubdomainStripRules>(() =>
