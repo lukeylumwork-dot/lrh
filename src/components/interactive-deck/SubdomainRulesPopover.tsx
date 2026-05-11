@@ -1,11 +1,14 @@
-import { useState, type KeyboardEvent } from "react";
-import { Settings2, X } from "lucide-react";
+import { useRef, useState, type KeyboardEvent } from "react";
+import { Download, Settings2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   DEFAULT_RULES,
+  parseRulesPayload,
+  serializeRules,
   useSubdomainStripRules,
   type SubdomainStripRules,
 } from "@/lib/subdomainStripRules";
