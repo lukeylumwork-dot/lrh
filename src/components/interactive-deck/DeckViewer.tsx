@@ -177,6 +177,7 @@ export function DeckViewer({
               onActivate={handleHotspot}
               showOutline={showHotspotOutlines}
               selected={selectedHotspotId === h.id}
+              slides={variantSlides}
             />
           ))}
         </div>
