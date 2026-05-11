@@ -212,6 +212,11 @@
   --sidebar-accent-foreground: var(--lrh-navy-700);
   --sidebar-border: var(--lrh-surface-300);
   --sidebar-ring: var(--lrh-blue-500);
+
+  /* Admin hotspot action color-coding (admin overlays only) */
+  --hotspot-url: oklch(0.62 0.18 250);     /* blue */
+  --hotspot-goto: oklch(0.66 0.17 155);    /* green */
+  --hotspot-modal: oklch(0.72 0.17 65);    /* amber */
 }
 
 .dark {
