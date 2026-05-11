@@ -11,19 +11,40 @@ interface Props {
   slides?: DeckSlideDTO[];
 }
 
-function shortDomain(raw: string): string {
+const TRACKING_PARAM_RE =
+  /^(utm_|mc_|hsa_|hsenc|hsctatracking|matomo_|pk_|piwik_|ga_|gclid|gclsrc|fbclid|msclkid|yclid|dclid|twclid|igshid|li_fat_id|wickedid|s_kwcid|trk|trkcampaign|ref|ref_|ref_src|ref_url|source|cmpid|campaign_id|spm)/i;
+const STRIPPABLE_SUBDOMAINS = new Set(["www", "m", "mobile", "amp", "en"]);
+
+function normalizeUrl(raw: string): { host: string; path: string; search: string; pretty: string } | null {
   const trimmed = raw.trim();
-  if (!trimmed) return "(not set)";
+  if (!trimmed) return null;
   try {
     const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     const u = new URL(withProto);
-    const host = u.hostname.replace(/^www\./, "");
-    const path = u.pathname && u.pathname !== "/" ? u.pathname : "";
-    const full = `${host}${path}`;
-    return full.length > 38 ? `${full.slice(0, 37)}…` : full;
+    let host = u.hostname.toLowerCase();
+    const parts = host.split(".");
+    if (parts.length > 2 && STRIPPABLE_SUBDOMAINS.has(parts[0])) {
+      host = parts.slice(1).join(".");
+    } else {
+      host = host.replace(/^www\./, "");
+    }
+    const kept: string[] = [];
+    u.searchParams.forEach((v, k) => {
+      if (!TRACKING_PARAM_RE.test(k)) kept.push(`${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+    });
+    const search = kept.length ? `?${kept.join("&")}` : "";
+    const path = u.pathname && u.pathname !== "/" ? u.pathname.replace(/\/+$/, "") : "";
+    return { host, path, search, pretty: `${host}${path}${search}` };
   } catch {
-    return trimmed.length > 38 ? `${trimmed.slice(0, 37)}…` : trimmed;
+    return null;
   }
+}
+
+function shortDomain(raw: string): string {
+  if (!raw.trim()) return "(not set)";
+  const n = normalizeUrl(raw);
+  const full = n ? n.pretty : raw.trim();
+  return full.length > 38 ? `${full.slice(0, 37)}…` : full;
 }
 
 function actionSummary(
@@ -77,10 +98,11 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: 
     };
   }, [hovered]);
 
-  const fullUrl =
+  const rawUrl =
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
       ? String((hotspot.action_payload as { url?: unknown })?.url ?? "").trim()
       : "";
+  const fullUrl = rawUrl ? (normalizeUrl(rawUrl)?.pretty ?? rawUrl) : "";
 
   const actionColor: "url" | "goto" | "modal" | "default" =
     hotspot.action_type === "open_url" || hotspot.action_type === "link"
