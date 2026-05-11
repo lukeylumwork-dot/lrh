@@ -414,6 +414,7 @@ export function EditableBlock({
 
   if (block.hidden && !editing) return null;
 
+  // Styles applied to the block container (position, background, border, etc.)
   const style: CSSProperties = {
     position: "absolute",
     left: `${block.x}%`,
@@ -421,6 +422,24 @@ export function EditableBlock({
     width: `${block.w}%`,
     height: `${block.h}%`,
     textAlign: block.align ?? "left",
+    ...(block.backgroundColor !== undefined ? { backgroundColor: block.backgroundColor } : {}),
+    ...(block.borderColor !== undefined
+      ? { borderColor: block.borderColor, borderWidth: 1, borderStyle: "solid" as const }
+      : {}),
+    ...(block.borderRadius !== undefined ? { borderRadius: block.borderRadius } : {}),
+    ...(block.padding !== undefined ? { padding: block.padding } : {}),
+    ...(block.opacity !== undefined ? { opacity: block.opacity } : {}),
+    ...(block.zIndex !== undefined ? { zIndex: block.zIndex } : {}),
+  };
+
+  // Styles applied to text elements — does NOT resize the block container.
+  const textStyle: CSSProperties = {
+    ...(block.fontSize !== undefined ? { fontSize: block.fontSize } : {}),
+    ...(block.fontWeight !== undefined ? { fontWeight: block.fontWeight } : {}),
+    ...(block.fontFamily !== undefined ? { fontFamily: block.fontFamily } : {}),
+    ...(block.lineHeight !== undefined ? { lineHeight: block.lineHeight } : {}),
+    ...(block.letterSpacing !== undefined ? { letterSpacing: block.letterSpacing } : {}),
+    ...(block.color !== undefined ? { color: block.color } : {}),
   };
 
   const renderContent = () => {
@@ -444,10 +463,11 @@ export function EditableBlock({
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
             onBlur={() => handleTextBlur(draft)}
+            style={textStyle}
             className="w-full h-full bg-transparent outline-none resize-none font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl"
           />
         ) : (
-          <h1 className="font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl">
+          <h1 style={textStyle} className="font-heading font-bold tracking-tight leading-[1.05] text-4xl md:text-5xl">
             {withHighlight(block.text ?? "", highlight)}
           </h1>
         );
@@ -460,10 +480,11 @@ export function EditableBlock({
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
             onBlur={() => handleTextBlur(draft)}
+            style={textStyle}
             className="w-full bg-transparent outline-none uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium text-[11px]"
           />
         ) : (
-          <div className="text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium">
+          <div style={textStyle} className="text-[11px] uppercase tracking-[0.22em] text-[var(--lrh-blue-500)] font-medium">
             {block.text}
           </div>
         );
@@ -476,10 +497,11 @@ export function EditableBlock({
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleTextKeyDown}
             onBlur={() => handleTextBlur(draft)}
+            style={textStyle}
             className="w-full h-full bg-transparent outline-none resize-none text-base md:text-lg leading-relaxed text-foreground/80"
           />
         ) : (
-          <p className="text-base md:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
+          <p style={textStyle} className="text-base md:text-lg leading-relaxed text-foreground/80 whitespace-pre-wrap">
             {withHighlight(block.text ?? "", highlight)}
           </p>
         );
