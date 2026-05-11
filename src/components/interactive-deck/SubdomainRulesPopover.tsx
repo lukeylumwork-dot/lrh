@@ -1,11 +1,14 @@
-import { useState, type KeyboardEvent } from "react";
-import { Settings2, X } from "lucide-react";
+import { useRef, useState, type KeyboardEvent } from "react";
+import { Download, Settings2, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   DEFAULT_RULES,
+  parseRulesPayload,
+  serializeRules,
   useSubdomainStripRules,
   type SubdomainStripRules,
 } from "@/lib/subdomainStripRules";
@@ -16,6 +19,55 @@ interface Props {
 
 export function SubdomainRulesPopover({ deckId }: Props) {
   const [rules, save] = useSubdomainStripRules(deckId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    const json = serializeRules(rules);
+    try {
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+        await navigator.clipboard.writeText(json);
+        toast.success("Rules copied");
+        return;
+      }
+      throw new Error("clipboard unavailable");
+    } catch {
+      try {
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `subdomain-rules-${deckId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("Rules downloaded");
+      } catch {
+        toast.error("Could not export rules");
+      }
+    }
+  };
+
+  const handleImportFile = async (file: File) => {
+    setImportError(null);
+    try {
+      const text = await file.text();
+      const parsed = parseRulesPayload(text);
+      if (!parsed) {
+        setImportError("Invalid file: not a subdomain-strip-rules payload.");
+        return;
+      }
+      save(parsed);
+      toast.success("Rules imported");
+    } catch {
+      setImportError("Could not read file.");
+    }
+  };
 
   return (
     <Popover>
@@ -48,16 +100,45 @@ export function SubdomainRulesPopover({ deckId }: Props) {
             onChange={(allow) => save({ ...rules, allow })}
           />
 
-          <div className="flex justify-between gap-2 pt-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => save({ ...DEFAULT_RULES })}
-            >
-              Reset to defaults
-            </Button>
-            <p className="self-center text-[11px] text-muted-foreground">
-              Saved to this deck on this device
+          {importError && (
+            <p className="text-xs text-destructive">{importError}</p>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => save({ ...DEFAULT_RULES })}
+              >
+                Reset
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleExport}>
+                <Download className="mr-1 h-3.5 w-3.5" />
+                Export
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="mr-1 h-3.5 w-3.5" />
+                Import
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void handleImportFile(f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Per deck · this device
             </p>
           </div>
         </div>
