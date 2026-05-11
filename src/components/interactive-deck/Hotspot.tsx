@@ -85,7 +85,8 @@ function actionSummary(
   }
 }
 
-export function Hotspot({ hotspot, onActivate, showOutline, selected, slides }: Props) {
+export function Hotspot({ hotspot, onActivate, showOutline, selected, slides, subdomainRules }: Props) {
+  const rules = subdomainRules ?? DEFAULT_RULES;
   const [hovered, setHovered] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
