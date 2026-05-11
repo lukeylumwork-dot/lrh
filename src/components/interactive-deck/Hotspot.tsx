@@ -162,7 +162,7 @@ export function Hotspot({ hotspot, onActivate, showOutline, selected, slides, su
         >
           <div className="font-medium">{hotspot.label ?? "Hotspot"}</div>
           {(() => {
-            const { icon: Icon, text } = actionSummary(hotspot, slides);
+            const { icon: Icon, text } = actionSummary(hotspot, slides, rules);
             return (
               <div className="mt-0.5 flex items-start gap-1 text-muted-foreground">
                 <Icon className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
