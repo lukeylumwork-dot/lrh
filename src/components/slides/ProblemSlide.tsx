@@ -100,7 +100,7 @@ const defaultBlocks: Block[] = [
     h: 12,
   },
 
-  // Four cards — each broken into: container, icon, title, body
+  // Four cards — each broken into: container (card kind), icon, title, body
   ...items.flatMap((item, i) => {
     const n = i + 1;
     const { x, y } = cardOrigin(i);
@@ -108,17 +108,16 @@ const defaultBlocks: Block[] = [
     const bodyY = titleY + TITLE_H + TITLE_MB;
     const bodyH = CARD_H - CARD_PAD_Y - TITLE_H - TITLE_MB - CARD_PAD_Y;
     return [
-      // Card background / container
+      // Card background — uses the "card" kind so block.style overrides work directly
       {
         id: `card-container-${n}`,
-        kind: "region" as const,
-        regionId: `card-container-${n}`,
+        kind: "card" as const,
         x,
         y,
         w: CARD_W,
         h: CARD_H,
       },
-      // Icon
+      // Icon region — fills the block bounds, centered
       {
         id: `icon-${n}`,
         kind: "region" as const,
@@ -169,21 +168,41 @@ const defaultBlocks: Block[] = [
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+// Legacy "cards" region — rendered when old persisted overrides still contain regionId: "cards".
+function LegacyCardsRegion() {
+  return (
+    <div className="grid grid-cols-2 gap-5 w-full h-full">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={item.title}
+            className="bg-card border border-border rounded-md p-6 flex items-start gap-5"
+          >
+            <div className="shrink-0 h-14 w-14 flex items-center justify-center rounded-md bg-[var(--lrh-blue)] text-white">
+              <Icon size={24} strokeWidth={1.75} />
+            </div>
+            <div>
+              <p className="text-lg font-bold mb-2">{item.title}</p>
+              <p className="text-sm">{item.body}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ProblemSlide() {
-  // Build region renderers for each card's container and icon.
   const regions: Record<string, React.ReactNode> = {
     footer: <SlideFooter page={3} />,
+    // Legacy slot — old saved overrides that still have regionId:"cards" will render this.
+    cards: <LegacyCardsRegion />,
   };
 
   items.forEach((item, i) => {
     const n = i + 1;
     const Icon = item.icon;
-
-    // Card background — renders the card border + fill, fills the block bounds
-    regions[`card-container-${n}`] = (
-      <div className="w-full h-full rounded-md bg-card border border-border" />
-    );
-
     // Icon — fills the block bounds, centered
     regions[`icon-${n}`] = (
       <div className="w-full h-full flex items-center justify-center rounded-md bg-[var(--lrh-blue)] text-white">
@@ -192,7 +211,5 @@ export function ProblemSlide() {
     );
   });
 
-  return (
-    <GenericSlide slideId="problem" defaultBlocks={defaultBlocks} regions={regions} />
-  );
+  return <GenericSlide slideId="problem" defaultBlocks={defaultBlocks} regions={regions} />;
 }

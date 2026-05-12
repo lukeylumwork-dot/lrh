@@ -63,8 +63,7 @@ export function EditorSidePanel({
   layoutVariant,
   layoutOptions,
 }: Props) {
-  const { editing, selectedBlockId, setSelectedBlockId, updateBlock, updateOverride } =
-    useEditor();
+  const { editing, selectedBlockId, setSelectedBlockId, updateBlock, updateOverride } = useEditor();
   if (!editing) return null;
 
   const selected = blocks.find((b) => b.id === selectedBlockId) ?? null;
@@ -102,7 +101,7 @@ export function EditorSidePanel({
                 deckKind,
                 slideKey,
                 { highlightKeyword: e.target.value || null },
-                defaults
+                defaults,
               )
             }
             placeholder="e.g. data layer"
@@ -122,12 +121,7 @@ export function EditorSidePanel({
             <select
               value={layoutVariant ?? layoutOptions[0].value}
               onChange={(e) =>
-                updateOverride(
-                  deckKind,
-                  slideKey,
-                  { layoutVariant: e.target.value },
-                  defaults
-                )
+                updateOverride(deckKind, slideKey, { layoutVariant: e.target.value }, defaults)
               }
               className="w-full h-8 rounded border border-border bg-background px-2 text-sm outline-none focus:border-[var(--lrh-blue)]"
             >
@@ -153,9 +147,11 @@ export function EditorSidePanel({
                   ? (b.imageUrl ?? "(no image)")
                   : b.kind === "region"
                     ? (b.regionId ?? b.id)
-                    : b.kind === "bullets"
-                      ? (b.bullets ?? []).slice(0, 1).join("") || "(empty)"
-                      : b.text || "(empty)";
+                    : b.kind === "card"
+                      ? b.id
+                      : b.kind === "bullets"
+                        ? (b.bullets ?? []).slice(0, 1).join("") || "(empty)"
+                        : b.text || "(empty)";
               return (
                 <li key={b.id}>
                   <button
@@ -164,13 +160,11 @@ export function EditorSidePanel({
                       "w-full text-left px-2 py-1.5 rounded text-xs flex items-center justify-between gap-2 border",
                       isSel
                         ? "bg-[var(--lrh-blue)]/10 border-[var(--lrh-blue)]/40"
-                        : "border-transparent hover:bg-muted"
+                        : "border-transparent hover:bg-muted",
                     )}
                   >
                     <span className="flex flex-col items-start min-w-0">
-                      <span className="text-[10px] uppercase text-foreground/45">
-                        {b.kind}
-                      </span>
+                      <span className="text-[10px] uppercase text-foreground/45">{b.kind}</span>
                       <span className="truncate w-48 text-foreground/80">{preview}</span>
                     </span>
                     <span
@@ -208,26 +202,28 @@ export function EditorSidePanel({
               </button>
             </div>
 
-            {/* Text alignment — all block kinds */}
-            <div>
-              <label className="block text-[10px] text-foreground/50 mb-1">Alignment</label>
-              <div className="flex gap-1">
-                {(["left", "center", "right"] as const).map((a) => (
-                  <button
-                    key={a}
-                    onClick={() => upd({ align: a })}
-                    className={cn(
-                      "flex-1 h-7 rounded border text-[11px] capitalize",
-                      (selected.align ?? "left") === a
-                        ? "bg-[var(--lrh-blue)] text-white border-transparent"
-                        : "border-border text-foreground/70 hover:bg-muted"
-                    )}
-                  >
-                    {a}
-                  </button>
-                ))}
+            {/* Text alignment — textual blocks only */}
+            {isTextual && (
+              <div>
+                <label className="block text-[10px] text-foreground/50 mb-1">Alignment</label>
+                <div className="flex gap-1">
+                  {(["left", "center", "right"] as const).map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => upd({ align: a })}
+                      className={cn(
+                        "flex-1 h-7 rounded border text-[11px] capitalize",
+                        (selected.align ?? "left") === a
+                          ? "bg-[var(--lrh-blue)] text-white border-transparent"
+                          : "border-border text-foreground/70 hover:bg-muted",
+                      )}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Position & size — x, y resize the block; w, h resize the container only */}
             <div>
@@ -259,7 +255,6 @@ export function EditorSidePanel({
                   Typography
                 </label>
 
-                {/* Font size */}
                 <label className="flex items-center gap-1.5 text-[11px]">
                   <span className="text-foreground/50 w-14 shrink-0">Font size</span>
                   <input
@@ -277,7 +272,6 @@ export function EditorSidePanel({
                   <span className="text-foreground/40 text-[10px]">px</span>
                 </label>
 
-                {/* Font weight */}
                 <label className="flex items-center gap-1.5 text-[11px]">
                   <span className="text-foreground/50 w-14 shrink-0">Weight</span>
                   <select
@@ -298,7 +292,6 @@ export function EditorSidePanel({
                   </select>
                 </label>
 
-                {/* Text color */}
                 <ColorField
                   label="Text color"
                   value={selected.color}
@@ -382,11 +375,7 @@ export function EditorSidePanel({
                     min={0}
                     max={100}
                     step={1}
-                    value={
-                      selected.opacity !== undefined
-                        ? Math.round(selected.opacity * 100)
-                        : ""
-                    }
+                    value={selected.opacity !== undefined ? Math.round(selected.opacity * 100) : ""}
                     placeholder="100"
                     onChange={(e) =>
                       upd({
