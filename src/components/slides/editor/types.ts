@@ -21,6 +21,27 @@ export interface Block {
   h: number;
   hidden?: boolean;
   align?: "left" | "center" | "right";
+  // --- Optional style overrides (safe-default: undefined = use class-based defaults) ---
+  fontFamily?: string;
+  /** Font size in CSS px units. Overrides class-based font sizing. */
+  fontSize?: number;
+  /** CSS font-weight value (e.g. 400, 700, "bold"). */
+  fontWeight?: string | number;
+  lineHeight?: number | string;
+  letterSpacing?: string;
+  /** CSS color value for text. */
+  color?: string;
+  /** CSS color value for block background. */
+  backgroundColor?: string;
+  /** CSS color value for block border. Also enables a 1px solid border. */
+  borderColor?: string;
+  /** Border radius in px. */
+  borderRadius?: number;
+  /** Uniform padding in px applied to the block container. */
+  padding?: number;
+  /** Opacity from 0 to 1. */
+  opacity?: number;
+  zIndex?: number;
 }
 
 export interface SlideOverride {
