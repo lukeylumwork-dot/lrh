@@ -121,9 +121,7 @@ function withHighlight(text: string, highlight?: string | null) {
   return (
     <>
       {text.slice(0, idx)}
-      <span className="text-[var(--lrh-blue-500)]">
-        {text.slice(idx, idx + highlight.length)}
-      </span>
+      <span className="text-[var(--lrh-blue-500)]">{text.slice(idx, idx + highlight.length)}</span>
       {text.slice(idx + highlight.length)}
     </>
   );
@@ -183,14 +181,8 @@ export function EditableBlock({
   className,
   highlight,
 }: Props) {
-  const {
-    editing,
-    setEditing,
-    selectedBlockId,
-    setSelectedBlockId,
-    updateBlock,
-    updateOverride,
-  } = useEditor();
+  const { editing, setEditing, selectedBlockId, setSelectedBlockId, updateBlock, updateOverride } =
+    useEditor();
   const peers = useContext(Peers);
   const ref = useRef<HTMLDivElement>(null);
   const rect = useSlideRect(ref);
@@ -208,12 +200,7 @@ export function EditableBlock({
       if (!(e.key === "k" || e.key === "K") || !(e.metaKey || e.ctrlKey)) return;
       e.preventDefault();
       const sel = window.getSelection()?.toString().trim() ?? "";
-      updateOverride(
-        deckKind,
-        slideKey,
-        { highlightKeyword: sel || null },
-        defaults,
-      );
+      updateOverride(deckKind, slideKey, { highlightKeyword: sel || null }, defaults);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -307,10 +294,8 @@ export function EditableBlock({
             peers.blocks,
             block.id,
           );
-          if (snapX !== undefined)
-            nx = Math.max(0, Math.min(100 - startBlock.w, snapX));
-          if (snapY !== undefined)
-            ny = Math.max(0, Math.min(100 - startBlock.h, snapY));
+          if (snapX !== undefined) nx = Math.max(0, Math.min(100 - startBlock.w, snapX));
+          if (snapY !== undefined) ny = Math.max(0, Math.min(100 - startBlock.h, snapY));
           peers.setGuides(guides);
         } else {
           peers.setGuides([]);
@@ -455,12 +440,7 @@ export function EditableBlock({
       while (s > 0 && isWord(text[s - 1])) s--;
       while (e < text.length && isWord(text[e])) e++;
       const word = text.slice(s, e).trim();
-      updateOverride(
-        deckKind,
-        slideKey,
-        { highlightKeyword: word || null },
-        defaults,
-      );
+      updateOverride(deckKind, slideKey, { highlightKeyword: word || null }, defaults);
     },
     [deckKind, slideKey, defaults, updateOverride],
   );

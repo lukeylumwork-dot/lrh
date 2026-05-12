@@ -168,9 +168,36 @@ const defaultBlocks: Block[] = [
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+// Legacy "cards" region — rendered when old persisted overrides still contain regionId: "cards".
+function LegacyCardsRegion() {
+  return (
+    <div className="grid grid-cols-2 gap-5 w-full h-full">
+      {items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={item.title}
+            className="bg-card border border-border rounded-md p-6 flex items-start gap-5"
+          >
+            <div className="shrink-0 h-14 w-14 flex items-center justify-center rounded-md bg-[var(--lrh-blue)] text-white">
+              <Icon size={24} strokeWidth={1.75} />
+            </div>
+            <div>
+              <p className="text-lg font-bold mb-2">{item.title}</p>
+              <p className="text-sm">{item.body}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ProblemSlide() {
   const regions: Record<string, React.ReactNode> = {
     footer: <SlideFooter page={3} />,
+    // Legacy slot — old saved overrides that still have regionId:"cards" will render this.
+    cards: <LegacyCardsRegion />,
   };
 
   items.forEach((item, i) => {
@@ -184,7 +211,5 @@ export function ProblemSlide() {
     );
   });
 
-  return (
-    <GenericSlide slideId="problem" defaultBlocks={defaultBlocks} regions={regions} />
-  );
+  return <GenericSlide slideId="problem" defaultBlocks={defaultBlocks} regions={regions} />;
 }

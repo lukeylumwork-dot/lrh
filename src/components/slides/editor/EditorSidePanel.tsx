@@ -63,8 +63,7 @@ export function EditorSidePanel({
   layoutVariant,
   layoutOptions,
 }: Props) {
-  const { editing, selectedBlockId, setSelectedBlockId, updateBlock, updateOverride } =
-    useEditor();
+  const { editing, selectedBlockId, setSelectedBlockId, updateBlock, updateOverride } = useEditor();
   if (!editing) return null;
 
   const selected = blocks.find((b) => b.id === selectedBlockId) ?? null;
@@ -376,11 +375,7 @@ export function EditorSidePanel({
                     min={0}
                     max={100}
                     step={1}
-                    value={
-                      selected.opacity !== undefined
-                        ? Math.round(selected.opacity * 100)
-                        : ""
-                    }
+                    value={selected.opacity !== undefined ? Math.round(selected.opacity * 100) : ""}
                     placeholder="100"
                     onChange={(e) =>
                       upd({

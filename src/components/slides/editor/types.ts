@@ -1,11 +1,4 @@
-export type BlockKind =
-  | "title"
-  | "text"
-  | "bullets"
-  | "image"
-  | "eyebrow"
-  | "region"
-  | "card";
+export type BlockKind = "title" | "text" | "bullets" | "image" | "eyebrow" | "region" | "card";
 
 export interface Block {
   id: string;
